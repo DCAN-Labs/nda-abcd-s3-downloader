@@ -9,7 +9,7 @@ To use this downloader you must first have an NDA account and acquire collection
 
 You must also provide a list of the derivative types you wish to download. For simplicity a list of all possible derivatives is provided with this repository: basename_derivatives.txt. If you would only like a subset of derivatives it is recommended that you copy only the derivative types that you want into a new .txt file and point to that when calling derivatives_downloader.py
 
-```{bash}
+```
 usage: derivatives_downloaders [-h] --s3-spreadsheet S3_FILE
                                [--subject-list SUBJECT_LIST_FILE]
                                [--derivatives-file BASENAMES_FILE]
