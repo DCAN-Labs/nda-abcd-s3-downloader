@@ -55,8 +55,7 @@ def generate_parser():
               "the basenames that you do not want.")
     )
     parser.add_argument(
-       "--output", "-o", dest="output", type=str,required=False,
-        default=PWD,
+       "--output", "-o", dest="output", type=str,required=True,
         help=("Path to folder which NDA data will be downloaded "
               "into. By default, data will be downloaded into the {} folder. "
               "A folder will be created at the given path if one does not "
@@ -115,7 +114,7 @@ def get_subject_list(manifest_df, subject_list_file):
     else:
         print('\tSubject list:      All subjects')
         for manifest_name in manifest_df['MANIFEST_NAME'].values:
-            subject_id = x.split('.')[0]
+            subject_id = manifest_name.split('.')[0]
             if subject_id not in subject_list:
                 subject_list.append(subject_id)
     return subject_list
@@ -141,20 +140,41 @@ def generate_manifest_list(basenames_file, subject_list):
             manifest_names += [manifest]
     return manifest_names
 
+def check_download_log(s3_fname, success_log):
+    with open(success_log) as f:
+        successs = f.readlines()
+    for fname in successs:
+        if s3_fname in fname:
+            return True
+    return False
+
 def download_s3_files(s3_links_arr, output_dir):
     """
     
     """
+    success_log = os.path.join(output_dir, 'succesful_downloads.txt')
+    failed_log = os.path.join(output_dir, 'failed_downloads.txt') 
     bad_download = []
     for s3_path in s3_links_arr:
-        dest = os.path.join(output_dir, '/'.join(s3_path.split('/')[4:]))
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        aws_cmd = ["aws", "s3", "cp", s3_path, dest, "--profile", "NDA"]
-        try:
-            subprocess.call(aws_cmd)
-        except:
-            print("Error downloading: {}".format(s3_path))
-            bad_download.append(s3_path)
+        if "dataset_description.json" in s3_path or "README" in s3_path or "CHANGES" in s3_path:
+            continue
+        else:
+            # Check if the filename already in the success log
+            if check_download_log('/'.join(s3_path.split('/')[4:]), success_log):
+                print("{} Already downloaded".format(os.path.basename(s3_path)))
+            else: 
+                dest = os.path.join(output_dir, '/'.join(s3_path.split('/')[4:]))
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                aws_cmd = ["aws", "s3", "cp", s3_path, dest, "--profile", "NDA"]
+                try:
+                    subprocess.call(aws_cmd)
+                    with open(success_log, 'a+') as s:
+                        s.write('/'.join(s3_path.split('/')[4:]) + '\n')
+                except:
+                    print("Error downloading: {}".format(s3_path))
+                    bad_download.append(s3_path)
+                    with open(failed_log, 'a+') as f:
+                        f.write('/'.join(s3_path.split('/')[4:]) + '\n')
 
 def make_nda_token(args):
     """
