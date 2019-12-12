@@ -4,14 +4,13 @@
 ABCD-BIDS Downloader
 
 Created   11/05/2019  Anders Perrone (perronea@ohsu.edu)
-Modified  12/05/2019  Eric Earl (earl@ohsu.edu)
+Modified  12/12/2019  Eric Earl (earl@ohsu.edu)
 """
-
-__version__ = "0.0.1"
 
 __doc__ = """
 This python script takes in a list of data subsets and a list of 
-subjects/sessions and downloads the corresponding files using the s3 links.
+subjects/sessions and downloads the corresponding files from NDA 
+using the NDA's provided AWS S3 links.
 """
 
 import argparse
@@ -36,10 +35,11 @@ class RepeatTimer(threading.Timer):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
 
-
 HOME = os.path.expanduser("~")
+NDA_CREDENTIALS = os.path.join(HOME, ".abcd2bids", "config.ini")
+
+### HARDCODED WARNING ###
 HERE = os.path.join(HOME, "code", "nda-s3-data-grinder", "1_pile")
-NDA_CREDENTIALS = os.path.join(os.path.expanduser("~"), ".abcd2bids", "config.ini")
 NDA_AWS_TOKEN_MAKER = os.path.join(HERE, "src", "nda_aws_token_maker.py")
 
 def generate_parser():
@@ -50,13 +50,13 @@ def generate_parser():
     )
     parser.add_argument(
         "-i", "--input-s3", dest="s3_file", type=str, required=True,
-        help=("Path to the .csv file downloaded from the NDA containing s3 links  "
+        help=("Path to the .csv file downloaded from the NDA containing s3 links "
               "for all subjects and their derivatives.")
     )
     parser.add_argument(
        "-o", "--output", dest="output", type=str, required=True,
-        help=("Path to folder which NDA data will be downloaded into. A folder "
-              "will be created at the given path if one does not "
+        help=("Path to root folder which NDA data will be downloaded into.  "
+              "A folder will be created at the given path if one does not "
               "already exist.")
     )
     parser.add_argument(
@@ -67,15 +67,15 @@ def generate_parser():
     parser.add_argument(
         "-g", "--logs", dest="log_folder", type=str, required=False,
         default=HOME,
-        help=("Path to existent folder to contain your download success and failure logs. "
+        help=("Path to existent folder to contain your download success and failure logs.  "
               "By default, the logs are output to: {}".format(HOME))
     )
     parser.add_argument(
         "-d", "--data-subsets-file", dest='basenames_file', type=str, required=False,
         default = os.path.join(HERE, 'data_subsets.txt'),
         help=("Path to a .txt file containing a list of all the data subset names to download "
-              "for each subject. By default all the possible derivatives and inputs will be will "
-              "be used. This is the derivative_basename.txt file included in this repository.  "
+              "for each subject.  By default all the possible derivatives and inputs will be will "
+              "be used.  This is the data_subsets.txt file included in this repository.  "
               "To select a subset it is recomended that you simply copy this file and remove all "
               "the basenames that you do not want.")
     )
@@ -83,9 +83,9 @@ def generate_parser():
         "-c", "--credentials", dest='credentials', required=False,
         default = NDA_CREDENTIALS,
         help=("Path to config file with NDA credentials. If no "
-              "config file exists at this path yet, then one will be created. "
+              "config file exists at this path yet, one will be created.  "
               "Unless this option or --username and --password is added, the "
-              "user will be prompted for their NDA username and password. "
+              "user will be prompted for their NDA username and password.  "
               "By default, the config file will be located at {}".format(NDA_CREDENTIALS))
     )
     parser.add_argument(
@@ -133,7 +133,7 @@ def _cli():
 
 def get_subject_list(manifest_df, subject_list_file):
     """
-    If a list of subject is provided then use that, else collect all uniq
+    If a list of subject is provided then use that, else collect all unique
     subject ids from the s3 spreadsheet and use that instead
     :param manifest_df: pandas dataframe created from the s3 csv
     :param subject_list_file: cli path to file containing list of subjects
@@ -184,6 +184,7 @@ def download_s3_files(s3_links_arr, output_dir, log_dir, pool_size=1):
     bad_download = []
     commands = []
 
+    # correct this typo, "succesful", not "successful", at a later date
     success_log = os.path.join(log_dir, 'succesful_downloads.txt')
     failed_log = os.path.join(log_dir, 'failed_downloads.txt')
     only_one_needed = [
