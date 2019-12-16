@@ -35,11 +35,10 @@ class RepeatTimer(threading.Timer):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
 
+
+HERE = os.path.dirname(os.path.abspath(sys.argv[0]))
 HOME = os.path.expanduser("~")
 NDA_CREDENTIALS = os.path.join(HOME, ".abcd2bids", "config.ini")
-
-### HARDCODED WARNING ###
-HERE = os.path.join(HOME, "code", "nda-s3-data-grinder", "1_pile")
 NDA_AWS_TOKEN_MAKER = os.path.join(HERE, "src", "nda_aws_token_maker.py")
 
 def generate_parser():

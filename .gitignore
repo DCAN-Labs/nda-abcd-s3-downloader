@@ -1,1 +1,4 @@
 collection_3165_manifest_s3_links.csv
+derivative_subsets.txt
+src/__pycache__/
+
