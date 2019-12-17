@@ -4,7 +4,7 @@
 ABCD-BIDS Downloader
 
 Created   11/05/2019  Anders Perrone (perronea@ohsu.edu)
-Modified  12/12/2019  Eric Earl (earl@ohsu.edu)
+Modified  12/16/2019  Greg Conan (conan@ohsu.edu)
 """
 
 __doc__ = """
@@ -35,10 +35,10 @@ class RepeatTimer(threading.Timer):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
 
-
-HERE = os.path.dirname(os.path.abspath(sys.argv[0]))
 HOME = os.path.expanduser("~")
 NDA_CREDENTIALS = os.path.join(HOME, ".abcd2bids", "config.ini")
+
+HERE = os.path.dirname(os.path.abspath(sys.argv[0]))
 NDA_AWS_TOKEN_MAKER = os.path.join(HERE, "src", "nda_aws_token_maker.py")
 
 def generate_parser():
