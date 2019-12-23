@@ -5,52 +5,56 @@ This tool can be used to download derivatives from the abcd-hcp-pipeline BIDS Ap
 
 ## Usage
 
-To use this downloader you must first have an NDA account and acquire collection_3165_manifest_s3_links.csv from the [NDA's website](https://ndar.nih.gov/)
+To use this downloader you must first have an NDA account and acquire `collection_3165_manifest_s3_links.csv` from the [NDA's website](https://ndar.nih.gov/)
 
-You must also provide a list of the derivative types you wish to download. For simplicity a list of all possible derivatives is provided with this repository: basename_derivatives.txt. If you would only like a subset of derivatives it is recommended that you copy only the derivative types that you want into a new .txt file and point to that when calling derivatives_downloader.py
+You must also provide a list of the derivative types you wish to download. For simplicity a list of all possible derivatives is provided with this repository: `basename_derivatives.txt`. If you would only like a subset of derivatives it is recommended that you copy only the derivative types that you want into a new .txt file and point to that when calling `derivatives_downloader.py`.
 
 ```
-usage: derivatives_downloaders [-h] --s3-spreadsheet S3_FILE
-                               [--subject-list SUBJECT_LIST_FILE]
-                               [--derivatives-file BASENAMES_FILE]
-                               [--output OUTPUT] [--credentials CREDENTIALS]
+usage: ABCD-BIDS Downloader [-h] -i S3_FILE -o OUTPUT [-l SUBJECT_LIST_FILE]
+                            [-g LOG_FOLDER] [-d BASENAMES_FILE]
+                            [-c CREDENTIALS] [-p CORES]
 
-This python script takes in a list of derivatives and a list of
-subjects/sessions and downloads the corresponding derivatives using the s3
-links
+This python script takes in a list of data subsets and a list of
+subjects/sessions and downloads the corresponding files from NDA using the
+NDA's provided AWS S3 links.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --s3-spreadsheet S3_FILE, -x S3_FILE
+  -i S3_FILE, --input-s3 S3_FILE
                         Path to the .csv file downloaded from the NDA
                         containing s3 links for all subjects and their
                         derivatives.
-  --subject-list SUBJECT_LIST_FILE, -s SUBJECT_LIST_FILE
+  -o OUTPUT, --output OUTPUT
+                        Path to root folder which NDA data will be downloaded
+                        into. A folder will be created at the given path if
+                        one does not already exist.
+  -l SUBJECT_LIST_FILE, --subject-list SUBJECT_LIST_FILE
                         Path to a .txt file containing a list of subjects for
                         which derivatives and inputs will be downloaded. By
-                        default if no
-  --derivatives-file BASENAMES_FILE, -d BASENAMES_FILE
-                        Path to a .txt file containing a list of all the
-                        derivative basenames to downloadfor each subject. By
-                        default all the possible derivatives and inputs will
-                        be willbe used. This is the derivative_basename.txt
-                        file included in this repository. To select a subset
-                        it is recomended that you simply copy this file and
-                        remove allthe basenames that you do not want.
-  --output OUTPUT, -o OUTPUT
-                        Path to folder which NDA data will be downloaded into.
-                        By default, data will be downloaded into the /home/exa
-                        cloud/lustre1/fnl_lab/projects/ABCD/download/derivativ
-                        es folder. A folder will be created at the given path
-                        if one does not already exist.
-  --credentials CREDENTIALS, -c CREDENTIALS
+                        default all available subjects are selected.
+  -g LOG_FOLDER, --logs LOG_FOLDER
+                        Path to existent folder to contain your download
+                        success and failure logs. By default, the logs are
+                        output to: {USER HOME}
+  -d BASENAMES_FILE, --data-subsets-file BASENAMES_FILE
+                        Path to a .txt file containing a list of all the data
+                        subset names to download for each subject. By default
+                        all the possible derivatives and inputs will be will
+                        be used. This is the data_subsets.txt file included in
+                        this repository. To select a subset it is recomended
+                        that you simply copy this file and remove all the
+                        basenames that you do not want.
+  -c CREDENTIALS, --credentials CREDENTIALS
                         Path to config file with NDA credentials. If no config
-                        file exists at this path yet, then one will be
-                        created. Unless this option or --username and
-                        --password is added, the user will be prompted for
-                        their NDA username and password. By default, the
-                        config file will be located at
-                        /home/users/perronea/.abcd2bids/config.ini
+                        file exists at this path yet, one will be created.
+                        Unless this option or --username and --password is
+                        added, the user will be prompted for their NDA
+                        username and password. By default, the config file
+                        will be located at
+                        {USER HOME}/.abcd2bids/config.ini
+  -p CORES, --parallel-downloads CORES
+                        Number of parallel downloads to do. Defaults to 1
+                        (serial downloading).
 
 ``` 
 
