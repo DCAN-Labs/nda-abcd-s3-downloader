@@ -4,7 +4,7 @@
 ABCD-BIDS Downloader
 
 Created   11/05/2019  Anders Perrone (perronea@ohsu.edu)
-Modified  12/16/2019  Greg Conan (conan@ohsu.edu)
+Modified  12/12/2019  Eric Earl (earl@ohsu.edu)
 """
 
 __doc__ = """
