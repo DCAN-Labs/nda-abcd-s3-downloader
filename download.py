@@ -44,7 +44,7 @@ NDA_AWS_TOKEN_MAKER = os.path.join(HERE, "src", "nda_aws_token_maker.py")
 def generate_parser():
 
     parser = argparse.ArgumentParser(
-        prog='ABCD-BIDS Downloader',
+        prog='download.py',
         description=__doc__
     )
     parser.add_argument(
@@ -61,13 +61,14 @@ def generate_parser():
     parser.add_argument(
         "-l", "--subject-list", dest="subject_list_file", type=str, required=False,
         help=("Path to a .txt file containing a list of subjects for which derivatives and "
-              "inputs will be downloaded. By default all available subjects are selected.")
+              "inputs will be downloaded. By default without providing input to this "
+              "argument all available subjects are selected.")
     )
     parser.add_argument(
         "-g", "--logs", dest="log_folder", type=str, required=False,
         default=HOME,
         help=("Path to existent folder to contain your download success and failure logs.  "
-              "By default, the logs are output to: {}".format(HOME))
+              "By default, the logs are output to your home directory: ~/")
     )
     parser.add_argument(
         "-d", "--data-subsets-file", dest='basenames_file', type=str, required=False,
@@ -81,11 +82,10 @@ def generate_parser():
     parser.add_argument(
         "-c", "--credentials", dest='credentials', required=False,
         default = NDA_CREDENTIALS,
-        help=("Path to config file with NDA credentials. If no "
-              "config file exists at this path yet, one will be created.  "
-              "Unless this option or --username and --password is added, the "
-              "user will be prompted for their NDA username and password.  "
-              "By default, the config file will be located at {}".format(NDA_CREDENTIALS))
+        help=("Path to config file with NDA credentials. If no config file exists at this path "
+              "yet, one will be created.  Unless this option is added, the user will be prompted "
+              "for their NDA username and password the first time this script occurs.  "
+              "By default, the config file will be located at ~/.abcd2bids/config.ini")
     )
     parser.add_argument(
         "-p", "--parallel-downloads", dest="cores", type=int, required=False,
@@ -183,8 +183,7 @@ def download_s3_files(s3_links_arr, output_dir, log_dir, pool_size=1):
     bad_download = []
     commands = []
 
-    # correct this typo, "succesful", not "successful", at a later date
-    success_log = os.path.join(log_dir, 'succesful_downloads.txt')
+    success_log = os.path.join(log_dir, 'successful_downloads.txt')
     failed_log = os.path.join(log_dir, 'failed_downloads.txt')
     only_one_needed = [
         "CHANGES",
