@@ -114,20 +114,22 @@ def _cli():
     print('\tLog folder:\t%s' % args.log_folder)
 
     print('\tS3 Spreadsheet:\t%s' % args.s3_file)
-    manifest_df = read_csv(args.s3_file)
+    manifest_df = read_csv(args.s3_file, sep='\t')
     subject_list = get_subject_list(manifest_df, args.subject_list_file)
 
     print('\tData Subsets:\t%s' % args.basenames_file)
     manifest_names = generate_manifest_list(args.basenames_file, subject_list)
 
     print('\nReading in S3 links...')
-    s3_links_arr = manifest_df[manifest_df['MANIFEST_NAME'].isin(manifest_names)]['ASSOCIATED_FILES'].values 
+    s3_links_arr = manifest_df[manifest_df['manifest_name'].isin(manifest_names)]['associated_file'].values 
 
     bad = download_s3_files(s3_links_arr, args.output, args.log_folder, args.cores)
 
     print('\nProblematic commands:')
     for baddy in bad:
         print(baddy)
+
+    t.stop()
 
 
 def get_subject_list(manifest_df, subject_list_file):
@@ -147,7 +149,7 @@ def get_subject_list(manifest_df, subject_list_file):
     # Otherwise get all subjects from the S3 spreadsheet
     else:
         print('\tSubjects:\tAll subjects')
-        for manifest_name in manifest_df['MANIFEST_NAME'].values:
+        for manifest_name in manifest_df['manifest_name'].values:
             subject_id = manifest_name.split('.')[0]
             subject_list.add(subject_id)
 
@@ -161,7 +163,7 @@ def generate_manifest_list(basenames_file, subject_list):
     in the s3 file.
     :param args: argparse namespace containing all CLI arguments. The specific
     arguments used by this function are
-    :return: manifest_names: list of MANIFEST_NAME
+    :return: manifest_names: list of manifest_name
     """
 
     # if a subject list is not provided
