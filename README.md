@@ -25,10 +25,9 @@ In addition to the "datastructure_manifest.txt" you must also provide a list of 
 
 ### subject_list.txt
 
-By default all data subsets specified in the data_subsets.txt for ALL subjects will be downloaded. If data from only a subset of subjects should be downloaded a .txt file with each unique subject ID on a new line must be provided with to `download.py` with the `-s` option. An example of what this file might look like is provided here:
+By default all data subsets specified in the data_subsets.txt for ALL subjects will be downloaded. If data from only a subset of subjects should be downloaded a .txt file with each unique BIDS formated subject ID on a new line must be provided to `download.py` with the `-s` option. Here is an example of what this file might look like for 3 subjects.
 
 ```shell
-cat subject_list.txt
 sub-NDARINVXXXXXXX
 sub-NDARINVYYYYYYY
 sub-NDARINVZZZZZZZ
@@ -39,7 +38,7 @@ sub-NDARINVZZZZZZZ
 A list of all necessary pip installable dependencies can be found in requirements.txt. To install run the following command:
 
 ```shell
-pip3 install -r requirements.txt --user
+python3 -m pip install -r requirements.txt --user
 ```
 
 
@@ -69,12 +68,12 @@ optional arguments:
                         Path to root folder which NDA data will be downloaded
                         into. A folder will be created at the given path if
                         one does not already exist.
-  -l SUBJECT_LIST_FILE, --subject-list SUBJECT_LIST_FILE
+  -s SUBJECT_LIST_FILE, --subject-list SUBJECT_LIST_FILE
                         Path to a .txt file containing a list of subjects for
                         which derivatives and inputs will be downloaded. By
                         default without providing input to this argument all
                         available subjects are selected.
-  -g LOG_FOLDER, --logs LOG_FOLDER
+  -l LOG_FOLDER, --logs LOG_FOLDER
                         Path to existent folder to contain your download
                         success and failure logs. By default, the logs are
                         output to your home directory: ~/
