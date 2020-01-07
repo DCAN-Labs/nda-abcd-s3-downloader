@@ -60,13 +60,13 @@ def generate_parser():
               "already exist.")
     )
     parser.add_argument(
-        "-l", "--subject-list", dest="subject_list_file", type=str, required=False,
+        "-s", "--subject-list", dest="subject_list_file", type=str, required=False,
         help=("Path to a .txt file containing a list of subjects for which derivatives and "
               "inputs will be downloaded. By default without providing input to this "
               "argument all available subjects are selected.")
     )
     parser.add_argument(
-        "-g", "--logs", dest="log_folder", type=str, required=False,
+        "-l", "--logs", dest="log_folder", type=str, required=False,
         default=HOME,
         help=("Path to existent folder to contain your download success and failure logs.  "
               "By default, the logs are output to your home directory: ~/")
@@ -291,7 +291,7 @@ def make_nda_token(credentials):
     # unless user entered other credentials to make a new config file
     
     # First make sure ~/.aws directory exists
-    os.makedirs(os.path.join(HOME, '.aws'))
+    os.makedirs(os.path.join(HOME, '.aws'), exist_ok=True)
     
     if os.path.exists(credentials):
         username, password = get_nda_credentials_from(credentials)
