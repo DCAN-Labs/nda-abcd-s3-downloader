@@ -21,22 +21,35 @@ To use this downloader you must first have an NDA account and download the "DCAN
 
 ### data_subsets.txt
 
-In addition to the "datastructure_manifest.txt" you must also provide a list of the data subset types you wish to download.  For ease of use a list of all possible data subsets is provided with this repository: `data_subsets.txt`.  If you would only like a subset of all data subsets you should copy only the data subset types that you want into a new `.txt` file and point to that when calling `download.py` with the `-d` option.
+In addition to the "datastructure_manifest.txt" you must also provide a list of the data subset types you wish to download.  For ease of use a list of all possible data subsets is provided with this repository: `data_subsets.txt`.  If you would only like a subset of all possible data subsets you should copy only the data subset types that you want into a new `.txt` file and point to that when calling `download.py` with the `-d` option.
 
 ### subject_list.txt
 
-By default all data subsets specified in the data_subsets.txt for ALL subjects will be downloaded. If data from only a subset of subjects should be downloaded a .txt file with each unique subject ID on a new line must be provided.
+By default all data subsets specified in the data_subsets.txt for ALL subjects will be downloaded. If data from only a subset of subjects should be downloaded a .txt file with each unique subject ID on a new line must be provided with to `download.py` with the `-s` option. An example of what this file might look like is provided here:
+
+```shell
+cat subject_list.txt
+sub-NDARINVXXXXXXX
+sub-NDARINVYYYYYYY
+sub-NDARINVZZZZZZZ
+```
 
 ### Python dependencies
 
-A list of all necessary pip installable dependencies can be found in requirements.txt
+A list of all necessary pip installable dependencies can be found in requirements.txt. To install run the following command:
+
+```shell
+pip3 install -r requirements.txt --user
+```
+
+
 
 ## Usage
 
 For full usage documentation, type the following while inside your folder containing this cloned repository.
 
 ```shell
-./download.py -h
+python3 download.py -h
 
 usage: download.py [-h] -i S3_FILE -o OUTPUT [-l SUBJECT_LIST_FILE]
                    [-g LOG_FOLDER] [-d BASENAMES_FILE] [-c CREDENTIALS]
