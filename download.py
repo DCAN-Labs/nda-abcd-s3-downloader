@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 
 """
 ABCD-BIDS Downloader
@@ -34,6 +33,8 @@ class RepeatTimer(threading.Timer):
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
+    def stop(self):
+        self.cancel()
 
 HOME = os.path.expanduser("~")
 NDA_CREDENTIALS = os.path.join(HOME, ".abcd2bids", "config.ini")
@@ -288,6 +289,10 @@ def make_nda_token(credentials):
     """
     # If config file with NDA credentials exists, then get credentials from it,
     # unless user entered other credentials to make a new config file
+    
+    # First make sure ~/.aws directory exists
+    os.makedirs(os.path.join(HOME, '.aws'))
+    
     if os.path.exists(credentials):
         username, password = get_nda_credentials_from(credentials)
 
