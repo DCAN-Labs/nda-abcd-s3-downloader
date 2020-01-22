@@ -50,8 +50,8 @@ For full usage documentation, type the following while inside your folder contai
 ```shell
 python3 download.py -h
 
-usage: download.py [-h] -i S3_FILE -o OUTPUT [-l SUBJECT_LIST_FILE]
-                   [-g LOG_FOLDER] [-d BASENAMES_FILE] [-c CREDENTIALS]
+usage: download.py [-h] -i S3_FILE -o OUTPUT [-s SUBJECT_LIST_FILE]
+                   [-l LOG_FOLDER] [-d BASENAMES_FILE] [-c CREDENTIALS]
                    [-p CORES]
 
 This python script takes in a list of data subsets and a list of
