@@ -6,7 +6,6 @@ This tool can be used to download BIDS inputs and derivatives from the DCAN Labs
 
 ### datastructure_manifest.txt 
 
-NOTE: This file is currently missing from the NDA package due to a bug caused by a recent update. The problem should be fixed within the next couple days. Please check back soon or email Anders Perrone (perronea@ohsu.edu) for notification when this issue has been resolved. Thank you for your paitience.  
 
 To use this downloader you must first have an NDA account and download the "DCAN Labs ABCD-BIDS MRI pipeline inputs and derivatives" collection from the [NDA website](https://ndar.nih.gov/):
 1.  Navigate to the [NDA website](https://ndar.nih.gov/)
