@@ -5,7 +5,7 @@ colorama==0.4.1
 wheel==0.33.6
 cryptography==2.8
 docutils==0.15.2
-httplib2==0.15.0
+httplib2==0.18.0
 jmespath==0.9.4
 numpy==1.18.0
 pandas==0.23.0
