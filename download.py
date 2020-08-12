@@ -319,7 +319,7 @@ def make_nda_token(credentials):
     # If NDA credentials are invalid, tell user so without printing password.
     # Manually catch error instead of using try-except to avoid trying to
     # catch another file's exception.
-    if token_call_exit_code is not 0:
+    if token_call_exit_code != 0:
         print("Failed to create NDA token using the username and decrypted "
               "password from {}.".format(os.path.abspath(credentials)))
         sys.exit(1)
