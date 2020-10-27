@@ -3,7 +3,7 @@ botocore==1.13.46
 cffi==1.13.2
 colorama==0.4.1
 wheel==0.33.6
-cryptography==2.8
+cryptography==3.2
 docutils==0.15.2
 httplib2==0.18.0
 jmespath==0.9.4
