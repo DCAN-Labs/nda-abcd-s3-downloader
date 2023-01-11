@@ -1,6 +1,7 @@
 
 import requests
 import json
+import getpass
 
 # Problem: Collection 3165 is too download all at once
 # Solution: 
@@ -8,6 +9,12 @@ import json
 #   2) Create a db on the user side that can be queried to download
 #       only the desired images
 #   3) Make list of files to download and run the download
+
+def get_auth():
+    # Securely get NDA username and password
+    ndar_username = input('Enter your NIMH Data Archives username: ')
+    ndar_password = getpass.getpass('Enter your NIMH Data Archives password: ')
+    return(ndar_username, ndar_password)
 
 
 package_id = 1203969
