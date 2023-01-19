@@ -11,12 +11,12 @@ To use this downloader you must first have an NDA account and download the "DCAN
 1.  Navigate to the [NDA website](https://ndar.nih.gov/)
 1.  Under "Get Data" select "Get Data beta"
 1.  On the side bar select "Data from Labs"
-1.  Search for "DCAN Labs ABCD-BIDS MRI pipeline inputs and derivatives"
+1.  Search for "DCAN Labs ABCD-BIDS Community Collection (ABCC)"
 1.  After clicking on the Collection Title select "Shared Data"
 1.  Click "Add to Cart" at the bottom
 1.  It will take a minute to update the "Filter Cart" in the upper right corner, but when that is done select "Package/Add to Study"
 1.  Select "Create Package", name your package accordingly, and click "Create Package"
-    -   IMPORTANT: Make sure "Include associated data files" is deselected or it will automatically attempt to download all the data through the NDA's package manager which is unreliable on such a large dataset. That is why we've created this downloader for you.
+    -   IMPORTANT: Make sure "Include associated data files" is selected
 1.  Now download the "Download Manager" to actually download the package or use the NDA's [nda-tools](https://github.com/NDAR/nda-tools) to download the package from the command line. This may take several minutes.
 1.  After the download is complete find the "datastructure_manifest.txt" in the downloaded directory. This is the input S3 file that contains AWS S3 links to every input and derivative for all of the selected subjects and you will need to give the path to this file when calling download.py
 
