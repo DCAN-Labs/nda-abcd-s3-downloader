@@ -78,10 +78,10 @@ print("Package ID {} contains {} files and is {}".format(package_id, num_files, 
 #   num_pages = 13342
 #   avg_request_time = 48 seconds
 #   total_download_time = 7.5 days
-# size = 10000
+# size = 10000 # starts to fail with timeout errors. Async might be necessary
 
 page = 1
-size = 5000
+size = 1000
 #url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(package_id, page, size)
 #data = get_data(url, ndar_username, ndar_password)
 
@@ -118,6 +118,83 @@ while True:
 
 #response = requests.get(url, auth=HTTPBasicAuth(ndar_username, ndar_password))
 #data = response.json()
+
+import asyncio
+from timeit import default_timer
+from concurrent.futures import ThreadPoolExecutor
+import re
+
+START TIME = default_timer()
+
+PACKAGE_ID = 1203969
+SIZE = 1000
+first_url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(package_id, 1, size)
+data = get_data(first_url, ndar_username, ndar_password)
+last_url = data['_links']['last']['href']
+num_pages = extract_page_num(last_url)
+
+def extract_page_num(url):
+    return int(re.findall('page=[0-9]+', url)[0].replace('page=', ''))
+
+def sync_request(session, i):
+    url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, i, SIZE)
+    with session.get(url, auth=HTTPBasicAuth(ndar_username, ndar_password)) as response:
+        data = response.json()
+        if response.status_code != 200:
+            print("FAILURE::{0}".format(url))
+        return data
+
+def start_sync_process():
+    with requests.session() as session:
+        print("{0:<30} {1:>20}".format("No", "Completed at"))
+        start_time = default_timer()
+        for i in range(2,5):
+            sync_request(session, i)
+            elapsed_time = default_timer() - start_time
+            completed_at = "{:5.2f}s".format(elapsed_time)
+            print("{0:<30} {1:>20}".format(i, completed_at))
+    
+
+def async_request(session, i):
+    url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, i, SIZE)
+    with session.get(url, auth=HTTPBasicAuth(ndar_username, ndar_password)) as response:
+        if response.status_code != 200:
+            #print("FAILURE::{0}".format(url))
+            print("{0:<30} {1:>20}".format(i, "FAILURE"))
+            return(url, None)
+        data = response.json()
+        elapsed_time = default_timer() - START_TIME
+        completed_at = "{:5.2f}s".format(elapsed_time)
+        print("{0:<30} {1:>20}".format(i, completed_at))
+        return(url, data['results'])
+    
+async def start_async_process(num_workers, num_pages, output=[]):
+    print("{0:<30} {1:>20}".format("No", "Completed at"))
+    with ThreadPoolExecutor(max_workers=num_workers) as executor:
+        with requests.Session() as session:
+            loop = asyncio.get_event_loop()
+            START_TIME = default_timer()
+            tasks = [
+                loop.run_in_executor(
+                    executor,
+                    async_request,
+                    *(session, i)
+                )
+                for i in range(2, num_pages)
+            ]
+            for response in asyncio.gather(*tasks):
+                output.append(response)
+    return output
+
+START_TIME = default_timer()
+loop = asyncio.get_event_loop()
+files = loop.run_until_complete(start_async_process(5, 10))
+#future = asyncio.ensure_future(start_async_process(5, 20))
+#files = loop.run_until_complete(future)
+
+# Upper limit on API requests seems to be approximately 5 workers and size=1000
+
+
 
 
 
