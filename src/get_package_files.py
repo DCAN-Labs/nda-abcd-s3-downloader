@@ -47,8 +47,7 @@ def retry(func, retries=5):
                 
 @retry
 def get_data(url, ndar_username, ndar_password):
-    r = requests.get(url, auth=HTTPBasicAuth(ndar_username, ndar_password))
-    return r.json()
+    return(requests.get(url, auth=HTTPBasicAuth(ndar_username, ndar_password)))
 
 
 # Get metrics on data package
@@ -227,19 +226,36 @@ from time import time
 SERVICE_NAME = 'nda-tools'
 NDAR_USERNAME = input('Enter your NIMH Data Archives username: ')
 try:
-    NDAR_PASSWORD = keyring.get_password(SERVICE_NAME, ndar_username)
+    NDAR_PASSWORD = keyring.get_password(SERVICE_NAME, NDAR_USERNAME)
 except:
     NDAR_PASSWORD = getpass.getpass('Enter your NIMH Data Archives password: ')
 
 PACKAGE_ID = 1203969
-SIZE = 1250
+SIZE = 1000
+
+def retry(func, retries=5):
+    def retry_wrapper(*args, **kwargs):
+        attempts = 0
+        while attempts < retries:
+            try:
+                return func(*args, **kwargs)
+            except requests.exceptions.RequestException as e:
+                print(e)
+                time.sleep(2)
+                attempts += 1
+        print('{} retries'.format(attempts))
+    return retry_wrapper
+                
+@retry
+def get_data(url, ndar_username, ndar_password):
+    return(requests.get(url, auth=HTTPBasicAuth(ndar_username, ndar_password)))
 
 def threaded_request(q, results):
     while not q.empty():
         page, url = q.get()
         try:
             start_time = default_timer()
-            r = requests.get(url, auth=HTTPBasicAuth(NDAR_USERNAME, NDAR_PASSWORD))
+            r = get_data(url, NDAR_USERNAME, NDAR_PASSWORD)
             data = r.json()
             results[url] = data
             elapsed_time = default_timer() - start_time
@@ -254,10 +270,18 @@ def threaded_request(q, results):
 q = Queue(maxsize=0)
 num_threads = 6
 
+first_url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, 1, SIZE)
+r = get_data(first_url, NDAR_USERNAME, NDAR_PASSWORD)
+data = r.json()
+last_url = data['_links']['last']['href']
+def extract_page_num(url):
+    return int(re.findall('page=[0-9]+', url)[0].replace('page=', ''))
+num_pages = extract_page_num(last_url)
+
 results = {'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, page, SIZE): None for page in range(1, num_pages)}
 
 # Load queue with urls indexed by page
-for page in range(1, 10):
+for page in range(1000, 1010):
     q.put((page, 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, page, SIZE)))
 
 START_TIME = default_timer()
@@ -272,40 +296,36 @@ print("{0:<30} {1:>20}".format("Requested URL", "Completed at"))
 q.join()
 print('All tasks completed in {}s'.format(default_timer() - START_TIME))
 
+# TODO: Loop all pages until complete
+for page in range(1000, 1010):
+    url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, page, SIZE)
+    if not results[url]:
+        q.put((page, url))
 
-
-
-class DownloadWorker(Thread):
-    def __init__(self, queue):
-        Thread.__init__(self)
-        self.queue = queue
-
-    def run(self):
-        while True:
-            page = self.queue.get()
-            try:
-                threaded_request(page)
-            finally:
-                self.queue.task_done()
-
-from threading import Thread
-
-queue = Queue()
-num_threads = 5
-for _ in range(num_threads):
-    #worker = DownloadWorker(queue)
-    worker = Thread(target=threaded_request, args=(queue,))
-    worker.daemon = True
+for i in range(num_threads):
+    logging.debug('Starting thread ', i)
+    worker = Thread(target=threaded_request, args=(q, results))
+    worker.setDaemon(True)
     worker.start()
 
-for i in range(1, num_pages):
-    logger.info('Queueing {}'.format(i))
-    queue.put(i)
-queue.join()
-logging.info('Completed in {')
+print("{0:<30} {1:>20}".format("Requested URL", "Completed at"))
+q.join()
+
+# TODO: Join all requests into a single dataframe
+output = []
+for page in range(1, 10):
+    url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, page, SIZE)
+    output.extend(results[page]['results'])
+
+# TODO: Create hashmap of filename to download_url
+fn_download_map = {}
+for f in output:
+    fn_download_map[f['download_alias']] = f['package_file_id']
 
 
-
+# TODO: Read in the datastructure manifest, create a list of all the associated files, extract out the filename and map to download_url
+ds_manifest_path = '/home/rando149/shared/code/internal/utilities/nda-abcd-s3-downloader/spreadsheets/datastructure_manifest.txt'
+ds_manifest = pd.read_csv(ds_manifest_path, sep='\t')
 
 
 
