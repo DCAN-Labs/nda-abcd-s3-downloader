@@ -3,11 +3,16 @@
 
 import requests
 import json
+from time import time
+import logging
+
 import getpass
 import keyring
 from requests.auth import HTTPBasicAuth
-from time import time
-import timeit
+
+from queue import Queue
+from threading import Thread
+
 
 # Problem: Collection 3165 is too download all at once
 # Solution: 
@@ -119,10 +124,7 @@ while True:
 #data = response.json()
 
 
-import logging
-from queue import Queue
-from threading import Thread
-from time import time
+
 
 SERVICE_NAME = 'nda-tools'
 NDAR_USERNAME = input('Enter your NIMH Data Archives username: ')
