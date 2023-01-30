@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-
 import requests
 import json
 from time import time
@@ -13,19 +12,119 @@ from requests.auth import HTTPBasicAuth
 from queue import Queue
 from threading import Thread
 
-
 # Problem: Collection 3165 is too download all at once
 # Solution: 
 #   1) Use paginator to collect download urls in digestable chunks
-#   2) Create a db on the user side that can be queried to download
-#       only the desired images
+#   2) Create a database (json) on the user side of all files associated with the collection
 #   3) Make list of files to download and run the download
 
-def get_auth():
-    # Securely get NDA username and password
-    ndar_username = input('Enter your NIMH Data Archives username: ')
-    ndar_password = getpass.getpass('Enter your NIMH Data Archives password: ')
-    return(ndar_username, ndar_password)
+def human_size(bytes, units=[' bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB']):
+    """ Returns a human readable string representation of bytes """
+    return str(round(bytes, 2)) + units[0] if bytes < 1024 else human_size(bytes / 1024, units[1:])
+
+class AssociatedFiles:
+    
+    def __init__(self):
+        # User authentication info
+        self.SERVICE_NAME = 'nda-tools'
+        self.ndar_username = None # perronea
+        self.ndar_passowrd = None
+        self.get_auth()
+
+        # Package info
+        self.package_id = None # 1203969
+        self.package_size = None # 168.57TB
+        self.file_count = None # 12,573,784
+        self.get_package_metadata()
+
+        # Get first page to setup parallel jobs
+        first_url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(self.package_id, 1, self.size)
+        r = self.get_data(first_url)
+        data = r.json()
+        last_url = data['_links']['last']['href']
+        num_pages = self.extract_page_num(last_url)
+
+        results = {'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, page, SIZE): None for page in range(1, num_pages)}
+
+        self.num_workers = 5 # Number of parallel threads should be less than the number of NDA servers (maybe 9?)
+        self.page_size = None # 1000 seems to be the max
+        self.q = Queue(maxsize=0) # Work queue to track all urls that need to be requested
+        self.all_requests = {} # Map urls to the request result
+        self.associated_files = [] # Compile all results in a list once complete
+
+    def get_auth(self):
+        self.NDAR_USERNAME = input('Enter your NIMH Data Archives username: ')
+        try:
+            self.NDAR_PASSWORD = keyring.get_password(self.SERVICE_NAME, self.ndar_passowrd)
+        except:
+            self.NDAR_PASSWORD = getpass.getpass('Enter your NIMH Data Archives password: ')
+
+    def get_data(self, url):
+        return(requests.get(url, auth=HTTPBasicAuth(self.ndar_username, self.ndar_password)))
+
+    def get_package_metadata(self):
+        url = 'https://nda.nih.gov/api/package/{}'.format(self.package_id)
+        data = self.get_data(url)
+        self.package_size = human_size(data['total_package_size']) # 168.57TB
+        self.file_count = data['file_count'] # 12573784
+        print("Package ID {} contains {} files and is {}".format(self.package_id, self.file_count, self.package_size))
+
+    def threaded_request(self, q, response_list):
+        while not q.empty():
+            page, url = q.get()
+            try:
+                start_time = default_timer()
+                r = self.get_data(url)
+                data = r.json()
+                results[url] = data
+                elapsed_time = default_timer() - start_time
+                completed_at = "{:5.2f}s".format(elapsed_time)
+                print("{0:<30} {1:>20}".format(url, completed_at))
+            except:
+                results[url] = None
+                print("{0:<30} {1:>20}".format(url, "FAILURE"))
+            q.task_done()
+        return True
+
+    def extract_page_num(self, url):
+            return int(re.findall('page=[0-9]+', url)[0].replace('page=', ''))
+
+    def do_work(self):
+        q = Queue(maxsize=0)
+        num_threads = 6
+
+        # Request the first page of the package to the total number of pages for parallel requests
+        first_url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(self.package_id, 1, self.size)
+        r = self.get_data(first_url)
+        data = r.json()
+        last_url = data['_links']['last']['href']
+        num_pages = self.extract_page_num(last_url)
+
+        results = {'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, page, SIZE): None for page in range(1, num_pages)}
+
+        # Load queue with urls indexed by page
+        for page in range(1000, 1010):
+            q.put((page, 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, page, SIZE)))
+
+        START_TIME = default_timer()
+
+        for i in range(num_threads):
+            logging.debug('Starting thread ', i)
+            worker = Thread(target=threaded_request, args=(q, results))
+            worker.setDaemon(True)
+            worker.start()
+
+        print("{0:<30} {1:>20}".format("Requested URL", "Completed at"))
+        q.join()
+        print('All tasks completed in {}s'.format(default_timer() - START_TIME))
+
+
+
+    
+    
+    
+
+
 
 SERVICE_NAME = 'nda-tools'
 ndar_username = input('Enter your NIMH Data Archives username: ')
@@ -119,11 +218,6 @@ while True:
     page += 1
     if page >= limit:
         break
-
-#response = requests.get(url, auth=HTTPBasicAuth(ndar_username, ndar_password))
-#data = response.json()
-
-
 
 
 SERVICE_NAME = 'nda-tools'
