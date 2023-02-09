@@ -196,19 +196,35 @@ def _send_prepared_request(prepped, timeout=150, deserialize_handler=Deserialize
             error_handler(tmp)
     return deserialize_handler(tmp)
 
-def get_request(url, headers={}, auth=None, timeout=150, deserialize_handler=DeserializeHandler.convert_json, error_handler=HttpErrorHandlingStrategy.print_and_exit):
-    req = requests.Request('GET', url, auth=auth, headers=headers)
-    return _send_prepared_request(req.prepare(), timeout=timeout, deserialize_handler=deserialize_handler, error_handler=error_handler)
+def get_request(url, headers=None, auth=None, _json=None, error_handler=HttpErrorHandlingStrategy.print_and_exit):
+    tmp = None
+    for i in range(10):
+        try:
+            with requests.Session() as session:
+                session.mount(url, HTTPAdapter(max_retries=10))
+                tmp = session.get(url, headers=headers, auth=auth, json=_json)
+                if not tmp.ok:
+                    error_handler(tmp)
+            return tmp
+        except requests.exceptions.ConnectionError as e:
+            if i == 9:
+                raise e
+            time.sleep(random.randint(10, 30))
 
-def post_request(url, payload=None, headers={}, auth=None, timeout=150, deserialize_handler=DeserializeHandler.convert_json, error_handler=HttpErrorHandlingStrategy.print_and_exit):
-    data_param, headers = get_data_and_header_params(payload, headers)
-    req = requests.Request('POST',  url, auth=auth,  headers=headers, **data_param)
-    return _send_prepared_request(req.prepare(), timeout=timeout, deserialize_handler=deserialize_handler, error_handler=error_handler)
-
-def put_request(url, payload=None, headers={}, auth=None, timeout=150, deserialize_handler=DeserializeHandler.convert_json, error_handler=HttpErrorHandlingStrategy.print_and_exit):
-    data_param, headers = get_data_and_header_params(payload, headers)
-    req = requests.Request('PUT',  url, auth=auth, headers=headers, **data_param)
-    return _send_prepared_request(req.prepare(), timeout=timeout, deserialize_handler=deserialize_handler, error_handler=error_handler)
+def post_request(url, _json, headers=None, auth=None, error_handler=HttpErrorHandlingStrategy.print_and_exit):
+    tmp = None
+    for i in range(10):
+        try:
+            with requests.Session() as session:
+                session.mount(url, HTTPAdapter(max_retries=10))
+                tmp = session.post(url, json=_json, headers=headers, auth=auth)
+                if not tmp.ok:
+                    error_handler(tmp)
+            return tmp
+        except requests.exceptions.ConnectionError as e:
+            if i == 9:
+                raise e
+            time.sleep(random.randint(10, 30))
 
 def get_data_and_header_params(payload, headers):
     data_param = {}
