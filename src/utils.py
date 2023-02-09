@@ -60,7 +60,6 @@ class HttpErrorHandlingStrategy():
     def ignore(r):
         pass
 
-
     @staticmethod
     def print_and_exit(r):
         # handle json and plain-text errors
@@ -95,53 +94,6 @@ def exit_client(signal=signal.SIGTERM, frame=None, message=None):
         logger.info('\n\nExit signal received, shutting down...')
     os._exit(1)
 
-
-def parse_local_files(directory_list, no_match, full_file_path, no_read_access, skip_local_file_check):
-    """
-    Iterates through associated files generate a dictionary of full filepaths and file sizes.
-    :param directory_list: List of directories
-    :param no_match: Stores list of invalid paths
-    :param full_file_path: Dictionary of tuples that store full filepath and file size
-    :param no_read_access: List of files that user does not have access to
-    :return: Modifies references to no_match, full_file_path, no_read_access
-    """
-    files_to_match = len(no_match)
-    logger.debug('Starting local directory search for {} files'.format(str(files_to_match)))
-    for file in no_match[:]:
-        file_key = sanitize_file_path(file)
-        for d in directory_list:
-            if skip_local_file_check:
-                file_name = os.path.join(d, file)
-                try:
-                    full_file_path[file_key] = (file_name, os.path.getsize(file_name))
-                    no_match.remove(file)
-                except (OSError, IOError) as err:
-                    if err.errno == 13:
-                        logger.info('Permission Denied: {}'.format(file_name))
-                    continue
-                break
-            else:
-                if os.path.isfile(file):
-                    file_name = file
-                elif os.path.isfile(os.path.join(d, file)):
-                    file_name = os.path.join(d, file)
-                else:
-                    continue
-                if not check_read_permissions(file_name):
-                    no_read_access.add(file_name)
-                full_file_path[file_key] = (file_name, os.path.getsize(file_name))
-                no_match.remove(file)
-                sys.stdout.write(
-                    '\rFound {} files out of {}\r'.format(str(files_to_match - len(no_match)), str(files_to_match)))
-                sys.stdout.flush()
-                break
-    sys.stdout.write('{}\r'.format(' '*64)) # clear out 'Found {} files ...' message and reset cursor
-    sys.stdout.flush()
-    logger.debug(
-        'Local directory search complete, found {} files out of {}'.format(str(files_to_match - len(no_match)),
-                                                                           str(files_to_match)))
-
-
 def sanitize_file_path(file):
     """
     Replaces backslashes with forward slashes and removes leading / or drive:/.
@@ -158,7 +110,6 @@ def sanitize_file_path(file):
         file_key = file_key.split(':/', 1)[1]
     return file_key
 
-
 def check_read_permissions(file):
     try:
         open(file)
@@ -168,17 +119,6 @@ def check_read_permissions(file):
             logger.info('Permission Denied: {}'.format(file))
     return False
 
-
-def evaluate_yes_no_input(message, default_input=None):
-    while True:
-        default_print = ' (Y/n)' if default_input.upper() == 'Y' else  ' (y/N)' if default_input.upper() == 'N' else ''
-        user_input = input('{}{}'.format(message, default_print)) or default_input
-        if str(user_input).upper() in ['Y', 'N']:
-            return user_input.lower()
-        else:
-            print('Input not recognized.')
-
-
 def get_error():
     exc_type, exc_value, exc_tb = sys.exc_info()
     tbe = traceback.TracebackException(
@@ -187,7 +127,6 @@ def get_error():
     ex = ''.join(tbe.format_exception_only())
     return 'Error: {}'.format(ex)
 
-
 def get_traceback():
     exc_type, exc_value, exc_tb = sys.exc_info()
     tbe = traceback.TracebackException(
@@ -195,7 +134,6 @@ def get_traceback():
     )
     tb = ''.join(tbe.format())
     return tb
-
 
 # return bucket and key for url (handles http and s3 protocol)
 def deconstruct_s3_url(url):
@@ -218,11 +156,9 @@ def deconstruct_s3_url(url):
 
     return bucket, path.lstrip('/')
 
-
 # converts . and .. and ~ in file-paths. (as well as variable names like %HOME%
 def convert_to_abs_path(file_name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(file_name)))
-
 
 def human_size(bytes, units=[' bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB']):
     """ Returns a human readable string representation of bytes """
@@ -260,7 +196,6 @@ def _send_prepared_request(prepped, timeout=150, deserialize_handler=Deserialize
             error_handler(tmp)
     return deserialize_handler(tmp)
 
-
 def get_request(url, headers={}, auth=None, timeout=150, deserialize_handler=DeserializeHandler.convert_json, error_handler=HttpErrorHandlingStrategy.print_and_exit):
     req = requests.Request('GET', url, auth=auth, headers=headers)
     return _send_prepared_request(req.prepare(), timeout=timeout, deserialize_handler=deserialize_handler, error_handler=error_handler)
@@ -290,14 +225,3 @@ def get_data_and_header_params(payload, headers):
         data_param = {'data': payload}
     return data_param, headers
 
-def get_s3_client_with_config(aws_access_key, aws_secret_key, aws_session_token):
-    return boto3.session.Session(aws_access_key_id=aws_access_key,
-                                 aws_secret_access_key=aws_secret_key,
-                                 aws_session_token=aws_session_token,
-                                 region_name='us-east-1').client('s3')
-
-
-def get_s3_resource(aws_access_key, aws_secret_key, aws_session_token, s3_config):
-    return boto3.Session(aws_access_key_id=aws_access_key,
-                         aws_secret_access_key=aws_secret_key,
-                         aws_session_token=aws_session_token).resource('s3', config=s3_config)
