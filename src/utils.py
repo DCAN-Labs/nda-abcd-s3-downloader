@@ -164,6 +164,13 @@ def human_size(bytes, units=[' bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB']):
     """ Returns a human readable string representation of bytes """
     return str(round(bytes, 2)) + units[0] if bytes < 1024 else human_size(bytes / 1024, units[1:])
 
+def human_time(seconds):
+    """ Returns time in seconds in a humand readable format """
+    m, s = divmod(seconds, 60) # Equivalent to (seconds / 60, seconds % 60)
+    h, m = divmod(m, 60)
+    d, h = divmod(h, 24)
+    return str(f'{d:d}:{h:02d}:{m:02d}:{s:02d}')
+
 def retry_connection_errors(func):
     @functools.wraps(func)
     def _retry(*args, **kwargs):

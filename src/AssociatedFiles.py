@@ -13,6 +13,8 @@ import requests
 from queue import Queue
 from threading import Thread
 
+from utils import *
+
 # Problem: Collection 3165 is too download all at once
 # Solution: 
 #   1) Use paginator to collect download urls in digestable chunks
@@ -34,16 +36,6 @@ from threading import Thread
 #   total_download_time = 7.5 days
 # size = 10000 # starts to fail with timeout errors. Async might be necessary
 
-def human_size(bytes, units=[' bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB']):
-    """ Returns a human readable string representation of bytes """
-    return str(round(bytes, 2)) + units[0] if bytes < 1024 else human_size(bytes / 1024, units[1:])
-
-def human_time(seconds):
-    """ Returns time in seconds in a humand readable format """
-    m, s = divmod(seconds, 60) # Equivalent to (seconds / 60, seconds % 60)
-    h, m = divmod(m, 60)
-    d, h = divmod(h, 24)
-    return str(f'{d:d}:{h:02d}:{m:02d}:{s:02d}')
 
 def retry(func):
     MAX_TRIES = 3
@@ -232,6 +224,9 @@ class QueryAssociatedFiles:
 
 
 def main():
+
+    def post_req():
+
     #TODO
     return
 
