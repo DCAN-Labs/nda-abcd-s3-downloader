@@ -6,11 +6,16 @@ subjects/sessions and downloads the corresponding files from NDA
 using the NDA's provided AWS S3 links.
 """
 
+import argparse
+
 import getpass
 import keyring
-import requests
-import argparse
+
 import pandas as pd
+
+import requests
+from requests import HTTPError
+
 from queue import Queue
 from threading import Thread
 import multiprocessing
@@ -18,6 +23,12 @@ import multiprocessing
 from utils import *
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+logger.addHandler(ch)
+logger.info('Level Set to INFO')
 
 HOME = os.path.expanduser("~")
 HERE = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -144,8 +155,20 @@ class Downloader:
 
         self.s3_links_arr = self.manifest[self.manifest['manifest_name'].isin(self.manifest_names)]['associated_file'].values
 
+        # Initialize hashmap of package file id to file metadata
+        self.local_file_names = {}
+        # Initialize hashmap of package file id to presigned url
+        self.presigned_urls = {}
+
+        self.download_directory = args.output
+
         self.thread_num = args.workerThreads if args.workerThreads else max([1, multiprocessing.cpu_count() - 1])
-        self.download_queue = Queue()
+
+        # Use generator function to get file metadata in batches given s3 urls
+        # Populate Queue for downloading files given presigned url
+        # Download
+        self.start()
+
 
     @staticmethod
     def request_header():
@@ -161,13 +184,16 @@ class Downloader:
         """
         subject_list = set()
 
+        print('Collecting Subjects')
+        logger.info('Logger Collecting Subjects')
+
         if self.subject_list_file:
-            print('\tSubjects:\t%s' % self.subject_list_file)
+            logger.info('\tSubjects:\t%s' % self.subject_list_file)
             subject_list = [line.rstrip('\n') for line in open(self.subject_list_file)]
 
         # Otherwise get all subjects from the S3 spreadsheet
         else:
-            print('\tSubjects:\tAll subjects')
+            logger.info('\tSubjects:\tAll subjects')
             for manifest_name in self.manifest['manifest_name'].values:
                 subject_id = manifest_name.split('.')[0]
                 subject_list.add(subject_id)
@@ -194,14 +220,102 @@ class Downloader:
                 manifest_names += [manifest]
         return manifest_names
 
+    def start(self):
+        download_pool = ThreadPool(self.thread_num)
+        download_request_ct = 0
+
+        for package_file_list in self.generate_download_file_ids():
+            additional_file_ct = len(package_file_list)
+            download_request_ct += additional_file_ct
+            package_file_id_list = [j['package_file_id'] for j in package_file_list]
+            self.get_presigned_urls(package_file_id_list)
+            logger.info('Adding {} files to download queue. Queue contains {} files\n'.format(additional_file_ct, download_request_ct))
+            download_pool.map(self.download_from_url, package_file_list)
+        
+        download_pool.wait_completion()
+
+        return
+
     def generate_download_file_ids(self):
         batch_size = self.thread_num
+        batch_start = 0
+        batch_end = min(batch_size, len(self.s3_links_arr))
         while True:
-            files = self.get_package_files_by_s3_url()
+            package_files = self.query_package_files_by_s3_url(self.s3_links_arr[batch_start:batch_end])
+            tmp = {r['package_file_id']:r for r in package_files}
+            self.local_file_names.update(tmp)
+            batch_start += batch_size
+            if batch_start >= len(self.s3_links_arr):
+                break
+            batch_end = min(batch_end + batch_size, len(self.s3_links_arr))
+            yield package_files
 
-    def get_package_files_by_s3_url(self):
+
+    def query_package_files_by_s3_url(self, s3_path_list):
         url = self.package_url + '/{}/files'.format(self.package_id)
+        response = post_request(url, list(s3_path_list), auth=self.auth, error_handler=HttpErrorHandlingStrategy.reraise_status)
+        response.raise_for_status()
+        return response.json()
 
+    def get_presigned_urls(self, id_list):
+        """
+        Stores key-value pairs of (key: package_file_id, value: presigned URL)
+        :param id_list: List of package file IDs with max size of 50,000
+        """
+        if len(id_list) == 1:
+            file_id = id_list[0]
+            url = self.package_url + '/{}/files/{}/download_url'.format(self.package_id, file_id)
+            tmp = post_request(url,headers=self.request_header(),_json=id_list,auth=self.auth, error_handler=HttpErrorHandlingStrategy.reraise_status)
+            response = json.loads(tmp.text)
+            return response['downloadURL']
+        else:
+            # Use the batchGeneratePresignedUrls when retrieving multiple files
+            url = self.package_url + '/{}/files/batchGeneratePresignedUrls'.format(self.package_id)
+            tmp = post_request(url,headers=self.request_header(),_json=id_list,auth=self.auth, error_handler=HttpErrorHandlingStrategy.reraise_status)
+            response = json.loads(tmp.text)
+            self.presigned_urls.update({e['package_file_id']: e['downloadURL'] for e in response['presignedUrls']})
+            return
+
+    def download_from_url(self, package_file):
+        package_file_id = package_file['package_file_id']
+        def get_http_adapter(s3_link):
+            bucket, path = deconstruct_s3_url(s3_link)
+            config = {'max_retries': 10}
+            #if ('.' in bucket):
+            #    return AltEndpointSSLAdapter(**config) # Not implemented
+            return HTTPAdapter(**config)
+
+        bytes_written = 0
+        alias = self.local_file_names[package_file_id]['download_alias']
+        completed_download = os.path.normpath(
+            os.path.join(self.download_directory, alias)
+            )
+        partial_download = os.path.normpath(
+            os.path.join(self.download_directory, alias + '.partial')
+            )
+        if os.path.isfile(partial_download):
+            downloaded = True
+            downloaded_size = os.path.getsize(partial_download)
+            resume_header = {'Range': 'bytes={}-'.format(downloaded_size)}
+            logger.info('Resuming download: {}'.format(partial_download))
+        else:
+            os.makedirs(os.path.dirname(partial_download), exist_ok=True)
+            logger.info('Starting download: {}'.format(partial_download))
+        ps_url = self.presigned_urls[package_file_id]
+        with requests.session() as s:
+            s.mount(ps_url, get_http_adapter(ps_url))
+            with open(partial_download, 'wb') as download_file:
+                with s.get(ps_url, stream=True) as response:
+                    response.raise_for_status()
+                    for chunk in response.iter_content(chunk_size=1024 * 1024 * 5): # iterate 5MB chunks
+                        if chunk:
+                            bytes_written += download_file.write(chunk)
+        os.rename(partial_download, completed_download)
+        logger.info('Completed download: {}'.format(completed_download))
+
+        return
+
+            
 
 
 class Authenticator:
