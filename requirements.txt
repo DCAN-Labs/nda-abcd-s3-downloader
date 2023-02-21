@@ -7,7 +7,7 @@ cryptography==39.0.1
 docutils==0.15.2
 httplib2==0.18.0
 jmespath==0.9.4
-numpy==1.18.0
+numpy==1.22.0
 pandas==0.23.0
 pyasn1==0.4.8
 pycparser==2.19
