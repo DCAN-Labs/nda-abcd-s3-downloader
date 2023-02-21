@@ -13,7 +13,7 @@ pyasn1==0.4.8
 pycparser==2.19
 python-dateutil==2.8.1
 pytz==2019.3
-PyYAML==5.2
+PyYAML==5.4
 rsa==4.7
 s3transfer==0.2.1
 six==1.13.0
