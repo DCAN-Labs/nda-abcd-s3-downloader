@@ -1,24 +1,35 @@
 # NDA Collection 3165 ABCD-BIDS Downloader
 
-This tool can be used to download BIDS inputs and derivatives from the DCAN Labs ABCD-BIDS collection 3165 from the NIMH Data Archive (NDA).  All files are hosted by the NDA in Amazon Web Services (AWS) Simple Storage Service (S3) buckets.
+This tool can be used to download data from the DCAN Labs ABCD-BIDS Collection 3165 that is hosted on the NIMH Data Archive (NDA). This dataset includes ABCD BIDS inputs and derivatives from the abcd-hcp-pipeline, fMRIPrep, and QSIPrep.  All files are stored in Amazon Web Services (AWS) Simple Storage Service (S3) buckets and can only be accessed via the NDA API.
+
+## Overview
+
+Collection 3165 is a massive dataset containing unprocessed BIDS formatted structural, functional, and difusion MRI data as well as processed data (derivatives) from the abcd-hcp-pipeline, fMRIPrep, and QSIPrep. This dataset is roughly 168TB with over 13 million files and is rapidly growing in size as more data is acquired. Due to the unusual suze if this collection the typical method of downloading data from the NDA via nda-tools has proven to be time consuming and prone to failure. As a result we are providing the community with this utility that was inspired by the nda-tools but designed specifically to download data from Collection 3165.
+
+In the past users have been able to download data from any collection they have access to directly from S3 by using the token generator created by the NDA. This method has been deprecated and users are now required to first create a Data Package containing their desired data and then download data from their Packages using the APIs that the NDA created.
+
+We recognize that users often want to download a subset of this collection, whether it be the BIDS input data, the functional data processed with abcd-hcp-pipeline, the diffusion processed with QSIPrep or a more specific subset of data from a particular population of subjects. To accommodate we recommend users provide a text file containing a list of data subsets and subjects
 
 ## Requirements
 
-### datastructure_manifest.txt 
+### Make Data Package on NDA website
 
+To use this downloader you must first have an NDA account and create a package containing the "DCAN Labs ABCD-BIDS MRI pipeline inputs and derivatives" collection from the [NDA website](https://ndar.nih.gov/):
 
-To use this downloader you must first have an NDA account and download the "DCAN Labs ABCD-BIDS MRI pipeline inputs and derivatives" collection from the [NDA website](https://ndar.nih.gov/):
-1.  Navigate to the [NDA website](https://ndar.nih.gov/)
-1.  Under "Get Data" select "Get Data beta"
-1.  On the side bar select "Data from Labs"
-1.  Search for "DCAN Labs ABCD-BIDS MRI pipeline inputs and derivatives"
-1.  After clicking on the Collection Title select "Shared Data"
-1.  Click "Add to Cart" at the bottom
-1.  It will take a minute to update the "Filter Cart" in the upper right corner, but when that is done select "Package/Add to Study"
-1.  Select "Create Package", name your package accordingly, and click "Create Package"
-    -   IMPORTANT: Make sure "Include associated data files" is deselected or it will automatically attempt to download all the data through the NDA's package manager which is unreliable on such a large dataset. That is why we've created this downloader for you.
-1.  Now download the "Download Manager" to actually download the package or use the NDA's [nda-tools](https://github.com/NDAR/nda-tools) to download the package from the command line. This may take several minutes.
-1.  After the download is complete find the "datastructure_manifest.txt" in the downloaded directory. This is the input S3 file that contains AWS S3 links to every input and derivative for all of the selected subjects and you will need to give the path to this file when calling download.py
+1. Navigate to the [NDA website](https://ndar.nih.gov/)and login to your account.
+2. On the top navigation bar click "Get Data".
+3. On the side bar click "Data from Labs".
+4. Search for "DCAN Labs ABCD-BIDS Community Collection (ABCC)" in the Text Search.
+5. After clicking on the collection title click "Add to Cart" at the bottom.
+6. It will take a minute to update the "Filter Cart" in the upper right corner. When that is done select "Package/Add to Study".
+7. By default all data submissions associated with this collections are selected. Alternatively you can select specific submissions to include in your data package.
+8. Click "Create Package", name your package accordingly, and then click "Create Package".
+    - IMPORTANT: Make sure "Include associated data files" is *selected*
+9. Navigate to your NDA dashboard and from your NDA dashboard, click DataPackages. You should see the data package that you just created with a status of "Creating Package". This package may take a day or two to be created on the NDA side if the entire collection has been included (roughly 168 TB). Take note of the "Package ID" - this is a required input for the downloader.
+
+### datastructure_manifest.txt
+
+The datastructure_manifest.txt is a metadata file associated with the data package that contains a list of S3 URLs for all of the data in the package. There is an API endpoint for this file that is currently under construction. Unfortunately the only way to download this file is by following the above instructions a second time but deselect "Include associated data files" when creating the Data Package.
 
 ### data_subsets.txt
 
@@ -42,8 +53,6 @@ A list of all necessary pip installable dependencies can be found in requirement
 python3 -m pip install -r requirements.txt --user
 ```
 
-
-
 ## Usage
 
 For full usage documentation, type the following while inside your folder containing this cloned repository.
@@ -57,28 +66,29 @@ usage: download.py [-h] -i S3_FILE -o OUTPUT [-s SUBJECT_LIST_FILE]
 
 This python script takes in a list of data subsets and a list of
 subjects/sessions and downloads the corresponding files from NDA using the
-NDA's provided AWS S3 links.
+NDA provided AWS S3 links.
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -i S3_FILE, --input-s3 S3_FILE
-                        Path to the .csv file downloaded from the NDA
-                        containing s3 links for all subjects and their
-                        derivatives.
-  -o OUTPUT, --output OUTPUT
+  -h, --help            Show this help message and exit.
+  -dp, --package        Package ID of the NDA data package.
+  -m, --manifest
+                        Path to the datstructure_manifest.txt file 
+                        downloaded from the NDA containing s3 links for all 
+                        subjects and their derivatives.
+  -o, --output
                         Path to root folder which NDA data will be downloaded
                         into. A folder will be created at the given path if
                         one does not already exist.
-  -s SUBJECT_LIST_FILE, --subject-list SUBJECT_LIST_FILE
+  -s, --subject-list
                         Path to a .txt file containing a list of subjects for
                         which derivatives and inputs will be downloaded. By
                         default without providing input to this argument all
                         available subjects are selected.
-  -l LOG_FOLDER, --logs LOG_FOLDER
+  -l, --logs
                         Path to existent folder to contain your download
                         success and failure logs. By default, the logs are
                         output to your home directory: ~/
-  -d BASENAMES_FILE, --data-subsets-file BASENAMES_FILE
+  -d, --data-subsets-file 
                         Path to a .txt file containing a list of all the data
                         subset names to download for each subject. By default
                         all the possible derivatives and inputs will be will
@@ -86,14 +96,16 @@ optional arguments:
                         this repository. To select a subset it is recomended
                         that you simply copy this file and remove all the
                         basenames that you do not want.
-  -c CREDENTIALS, --credentials CREDENTIALS
-                        Path to config file with NDA credentials. If no config
-                        file exists at this path yet, one will be created.
-                        Unless this option is added, the user will be prompted
-                        for their NDA username and password the first time
-                        this script occurs. By default, the config file will
-                        be located at ~/.abcd2bids/config.ini
-  -p CORES, --parallel-downloads CORES
-                        Number of parallel downloads to do. Defaults to 1
-                        (serial downloading).
-``` 
+  -wt, --workerThreads
+                        Specifies the number of downloads to attempt in
+                        parallel. For example, running downloadcmd -dp 12345
+                        -wt 10 will cause the program to download a maximum
+                        of 10 files simultaneously until all of the files from
+                        package 12345 have been downloaded. A default value is
+                        calculated based on the number of cpus found on the
+                        machine, however a higher value can be chosen to
+                        decrease download times. If this value is set too high
+                        the download will slow. With 32 GB of RAM, a value of
+                        10 is probably close to the maximum number of
+                        parallel downloads that the computer can handle
+```
