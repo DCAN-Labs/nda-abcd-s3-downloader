@@ -16,7 +16,6 @@ import traceback
 import boto3
 import requests
 from requests.adapters import HTTPAdapter
-import requests.packages.urllib3.util
 
 IS_PY2 = sys.version_info < (3, 0)
 

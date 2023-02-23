@@ -6,6 +6,9 @@ subjects/sessions and downloads the corresponding files from NDA
 using the NDA's provided AWS S3 links.
 """
 
+import os
+import sys
+import logging
 import argparse
 
 import getpass
@@ -20,7 +23,7 @@ from queue import Queue
 from threading import Thread
 import multiprocessing
 
-from utils import *
+from src.utils import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -28,7 +31,6 @@ logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
-logger.info('Level Set to INFO')
 
 HOME = os.path.expanduser("~")
 HERE = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -329,7 +331,7 @@ class Authenticator:
         try:
             self.ndar_password = keyring.get_password(self.service_name, self.ndar_username)
         except:
-            self.ndar_passowrd = getpass.getpass('Enter your NIMH Data Archives password: ')
+            self.ndar_password = getpass.getpass('Enter your NIMH Data Archives password: ')
         return requests.auth.HTTPBasicAuth(self.ndar_username, self.ndar_password)
 
 def main():

@@ -5,15 +5,17 @@ import json
 import re
 from timeit import default_timer
 import logging
+import pickle
 
 import getpass
 import keyring
 import requests
+import pandas as pd
 
 from queue import Queue
 from threading import Thread
 
-from utils import *
+from src.utils import *
 
 # Problem: Collection 3165 is too download all at once
 # Solution: 
@@ -209,8 +211,8 @@ class QueryAssociatedFiles:
         # TODO: Join all requests into a single dataframe
         output = []
         for page in range(1, 10):
-            url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(PACKAGE_ID, page, SIZE)
-            output.extend(results[page]['results'])
+            url = 'https://nda.nih.gov/api/package/{}/files?page={}&size={}'.format(self.package_id, page, self.page_size)
+            output.extend(url[page]['results'])
 
         # TODO: Create hashmap of filename to download_url
         fn_download_map = {}
@@ -222,16 +224,6 @@ class QueryAssociatedFiles:
         ds_manifest_path = '/home/rando149/shared/code/internal/utilities/nda-abcd-s3-downloader/spreadsheets/datastructure_manifest.txt'
         ds_manifest = pd.read_csv(ds_manifest_path, sep='\t')
 
-
-def main():
-
-    def post_req():
-
-    #TODO
-    return
-
-if __name__ == '__main__':
-    main()
 
 
 
