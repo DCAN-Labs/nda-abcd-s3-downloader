@@ -9,7 +9,8 @@ importlib-metadata==6.0.0
 jaraco.classes==3.2.3
 jeepney==0.8.0
 jmespath==1.0.1
-keyring==23.13.1
+keyring==23.4.1
+keyrings.alt==4.2.0
 more-itertools==9.0.0
 numpy==1.24.2
 pandas==1.5.3
