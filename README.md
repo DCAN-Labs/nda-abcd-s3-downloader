@@ -31,6 +31,13 @@ To use this downloader you must first have an NDA account and create a package c
 
 The datastructure_manifest.txt is a metadata file associated with the data package that contains a list of S3 URLs for all of the data in the package. There is an API endpoint for this file that is currently under construction. Unfortunately the only way to download this file is by following the above instructions a second time but deselect "Include associated data files" when creating the Data Package.
 
+Download the Data Package containing your `datastructure_manifest.txt` to your system prior to running:
+`downloadcmd -dp data_package_id -d /download/output/directory`
+
+From more information on `downloadcmd` visit the nda-tools GitHub Repository. In order to install `downloadcmd`, you must install `nda-tools`.
+
+Note: you will need to provide the path to your `datastructure_manifest.txt` file when running `download.py` with the `-m` flag.
+
 ## Recommended Inputs
 
 ### data_subsets.txt
