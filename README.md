@@ -34,6 +34,8 @@ The datastructure_manifest.txt is a metadata file associated with the data packa
 Download the Data Package containing your `datastructure_manifest.txt` to your system prior to running:
 `downloadcmd -dp data_package_id -d /download/output/directory`
 
+From more information on `downloadcmd` visit the nda-tools GitHub Repository. In order to install `downloadcmd`, you must install `nda-tools`.
+
 Note: you will need to provide the path to your `datastructure_manifest.txt` file when running `download.py` with the `-m` flag.
 
 ## Recommended Inputs
