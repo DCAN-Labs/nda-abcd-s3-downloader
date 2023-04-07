@@ -1,0 +1,17 @@
+derivatives.anat.anat_giis
+derivatives.anat.anat_MNI152NLin2009cAsym
+derivatives.anat.anat_orig
+derivatives.anat.anat_xfms
+derivatives.figures.report
+derivatives.func.task-MID_space-fsaverage5
+derivatives.func.task-MID_space-fsnative
+derivatives.func.task-MID_space-MNI152NLin2009cAsym
+derivatives.func.task-nback_space-fsaverage5
+derivatives.func.task-nback_space-fsnative
+derivatives.func.task-nback_space-MNI152NLin2009cAsym
+derivatives.func.task-rest_space-fsaverage5
+derivatives.func.task-rest_space-fsnative
+derivatives.func.task-rest_space-MNI152NLin2009cAsym
+derivatives.func.task-SST_space-fsaverage5
+derivatives.func.task-SST_space-fsnative
+derivatives.func.task-SST_space-MNI152NLin2009cAsym
