@@ -91,7 +91,7 @@ For full usage documentation, type the following while inside your folder contai
 python3 download.py -h
 
 usage: download.py [-h] -dp PACKAGE -m MANIFEST -o OUTPUT [-s SUBJECT_LIST_FILE]
-                   [-l LOG_FOLDER] [-d DATA_SUBSETS_FILE] [-wt WORKER_THREADS]
+                   [-l LOG_FOLDER] [-b BASENAMES_FILE] [-wt WORKER_THREADS]
 
 This python script takes in a list of data subsets and a list of
 subjects/sessions and downloads the corresponding files from NDA using the
@@ -119,9 +119,9 @@ optional arguments:
                         Path to existent folder to contain your download
                         success and failure logs. By default, the logs are
                         output to your home directory: ~/
-  -d, --data-subsets-file 
+  -b, --basenames-file 
                         Path to a .txt file containing a list of all the data
-                        subset names to download for each subject. By default
+                        subset basenames names to download for each subject. By default
                         all the possible derivatives and inputs will be will
                         be used. This is the data_subsets.txt file included in
                         this repository. To select a subset it is recomended
