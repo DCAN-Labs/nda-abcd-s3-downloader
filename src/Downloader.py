@@ -10,6 +10,8 @@ import os
 import sys
 import logging
 import argparse
+import copy
+import csv
 
 import getpass
 import keyring
@@ -143,7 +145,7 @@ class Downloader:
         self.package_url = 'https://nda.nih.gov/api/package'
 
         # Datastructure manifest that is automatically included in the data package (TODO: Download instead of input)
-        self.manifest = pd.read_csv(args.manifest_file,'\t')
+        self.manifest = pd.read_csv(args.manifest_file,delimiter='\t')
 
         # List of data subsets that the user intends to download
         self.data_basenames = args.basenames_file
@@ -163,6 +165,19 @@ class Downloader:
         self.presigned_urls = {}
 
         self.download_directory = args.output
+        
+        # Initialize a download progress report
+        self.download_progress_report_file_path = os.path.join(args.log_folder, 'progress_report.csv')
+        self.download_progress_report = {}
+        self.download_progress_report_column_defs = {
+            'package_file_id': None,
+            'package_file_expected_location': None,
+            'nda_s3_url': None,
+            'exists': False,
+            'expected_file_size': None,
+            'actual_file_size': 0,
+            'download_complete_time': None
+        }
 
         self.thread_num = args.workerThreads if args.workerThreads else max([1, multiprocessing.cpu_count() - 1])
 
@@ -224,7 +239,20 @@ class Downloader:
 
     def start(self):
         download_pool = ThreadPool(self.thread_num)
+        download_progress_file_writer_pool = ThreadPool(1, 1000)
         download_request_ct = 0
+
+        download_progress_report = open(self.download_progress_report_file_path, 'a', newline='')
+        download_progress_report_writer = csv.DictWriter(download_progress_report,
+                                                         fieldnames=self.download_progress_report_column_defs)
+
+        def write_to_download_progress_report_file(download_record):
+            download_progress_report_writer.writerow(download_record)
+
+        def download(package_file_id):
+            download_record = self.download_from_url(package_file_id)
+            download_progress_file_writer_pool.add_task(write_to_download_progress_report_file, download_record)
+            return
 
         for package_file_list in self.generate_download_file_ids():
             additional_file_ct = len(package_file_list)
@@ -232,9 +260,10 @@ class Downloader:
             package_file_id_list = [j['package_file_id'] for j in package_file_list]
             self.get_presigned_urls(package_file_id_list)
             logger.info('Adding {} files to download queue. Queue contains {} files\n'.format(additional_file_ct, download_request_ct))
-            download_pool.map(self.download_from_url, package_file_list)
+            download_pool.map(download, package_file_list)
         
         download_pool.wait_completion()
+        download_progress_report.close()
 
         return
 
@@ -243,7 +272,11 @@ class Downloader:
         batch_start = 0
         batch_end = min(batch_size, len(self.s3_links_arr))
         while True:
-            package_files = self.query_package_files_by_s3_url(self.s3_links_arr[batch_start:batch_end])
+            s3_links_batch = self.s3_links_arr[batch_start:batch_end]
+            package_files = self.query_package_files_by_s3_url(s3_links_batch)
+            # Add s3 url to package file metadata
+            for i, s3_url in enumerate(s3_links_batch):
+                package_files[i]['nda_s3_url'] = s3_url
             tmp = {r['package_file_id']:r for r in package_files}
             self.local_file_names.update(tmp)
             batch_start += batch_size
@@ -279,7 +312,11 @@ class Downloader:
             return
 
     def download_from_url(self, package_file):
+
+        return_value = copy.deepcopy(self.download_progress_report_column_defs)
+
         package_file_id = package_file['package_file_id']
+        return_value['package_file_id'] = str(package_file_id)
         def get_http_adapter(s3_link):
             bucket, path = deconstruct_s3_url(s3_link)
             config = {'max_retries': 10}
@@ -289,12 +326,24 @@ class Downloader:
 
         bytes_written = 0
         alias = self.local_file_names[package_file_id]['download_alias']
+        return_value['expected_file_size'] = self.local_file_names[package_file_id]['file_size']
+        return_value['package_file_expected_location'] = os.path.normpath(os.path.join(self.download_directory, alias))
+        return_value['nda_s3_url'] = package_file['nda_s3_url']
+
         completed_download = os.path.normpath(
             os.path.join(self.download_directory, alias)
             )
         partial_download = os.path.normpath(
             os.path.join(self.download_directory, alias + '.partial')
             )
+        
+        if os.path.isfile(completed_download):
+            logger.info('Skipping download (already exists): {}'.format(completed_download))
+            actual_size = os.path.getsize(completed_download)
+            return_value['actual_file_size'] = actual_size
+            return_value['exists'] = True
+            return return_value
+        
         if os.path.isfile(partial_download):
             downloaded = True
             downloaded_size = os.path.getsize(partial_download)
@@ -303,6 +352,7 @@ class Downloader:
         else:
             os.makedirs(os.path.dirname(partial_download), exist_ok=True)
             logger.info('Starting download: {}'.format(partial_download))
+
         ps_url = self.presigned_urls[package_file_id]
         with requests.session() as s:
             s.mount(ps_url, get_http_adapter(ps_url))
@@ -314,12 +364,13 @@ class Downloader:
                             bytes_written += download_file.write(chunk)
         os.rename(partial_download, completed_download)
         logger.info('Completed download: {}'.format(completed_download))
+        return_value['actual_file_size'] = bytes_written
+        return_value['exists'] = True
+        return_value['download_complete_time'] = time.strftime("%Y%m%dT%H%M%S")
 
-        return
+        return return_value
 
             
-
-
 class Authenticator:
 
     def __init__(self):
