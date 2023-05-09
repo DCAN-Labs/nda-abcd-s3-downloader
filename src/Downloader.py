@@ -45,30 +45,31 @@ def generate_parser():
     )
     parser.add_argument(
         '-dp', '--package', metavar='<package-id>', type=str, action='store',
-        help='Flags to download all S3 files in package. Required.')
+        help='Flags to download all S3 files in package. Required.'
+        )
     parser.add_argument(
         "-m", "--manifest", dest="manifest_file", type=str, required=True,
         help=("Path to the .csv file downloaded from the NDA containing s3 links "
               "for all subjects and their derivatives.")
-    )
+        )
     parser.add_argument(
        "-o", "--output", dest="output", type=str, required=True,
         help=("Path to root folder which NDA data will be downloaded into.  "
               "A folder will be created at the given path if one does not "
               "already exist.")
-    )
+        )
     parser.add_argument(
         "-s", "--subject-list", dest="subject_list_file", type=str, required=False,
         help=("Path to a .txt file containing a list of subjects for which derivatives and "
               "inputs will be downloaded. By default without providing input to this "
               "argument all available subjects are selected.")
-    )
+        )
     parser.add_argument(
         "-l", "--logs", dest="log_folder", type=str, required=False,
         default=HOME,
         help=("Path to existent folder to contain your download success and failure logs.  "
               "By default, the logs are output to your home directory: ~/")
-    )
+        )
     parser.add_argument(
         "-b", "--basenames-file", dest='basenames_file', type=str, required=False,
         default = os.path.join(HERE, 'data_subsets.txt'),
@@ -77,6 +78,13 @@ def generate_parser():
               "be used.  This is the data_subsets.txt file included in this repository.  "
               "To select a subset it is recomended that you simply copy this file and remove all "
               "the basenames that you do not want.")
+        )
+    parser.add_argument(
+        "-r", "--resume", dest="resume", action="store_true", required=False,
+        default = False,
+        help=("Flag to resume a previous download.  If this flag is set, the script will read "
+              "the {parser.log_folder}/.progress_report.csv file to determine which files have "
+              "already been downloaded and will skip those files.")
     )
     parser.add_argument(
         '-wt', '--workerThreads', metavar='<thread-count>', type=int, action='store',
@@ -84,7 +92,8 @@ def generate_parser():
     cause the program to download a maximum of 10 files simultaneously until all of the files from package 12345 have been downloaded. 
     A default value is calculated based on the number of cpus found on the machine, however a higher value can be chosen to decrease download times. 
     If this value is set too high the download will slow. With 32 GB of RAM, a value of '10' is probably close to the maximum number of 
-    parallel downloads that the computer can handle''')
+    parallel downloads that the computer can handle'''
+        )
 
     return parser
 
@@ -167,7 +176,7 @@ class Downloader:
         self.download_directory = args.output
         
         # Initialize a download progress report
-        self.download_progress_report_file_path = os.path.join(args.log_folder, 'progress_report.csv')
+        self.download_progress_report_file_path = os.path.join(args.log_folder, '.progress_report.csv')
         self.download_progress_report = {}
         self.download_progress_report_column_defs = {
             'package_file_id': None,
@@ -178,6 +187,11 @@ class Downloader:
             'actual_file_size': 0,
             'download_complete_time': None
         }
+        if args.resume:
+            self.download_progress_report = pd.read_csv(self.download_progress_report_file_path)
+            print('Resuming download from previous progress report')
+            # remove s3 urls from self.s3_links_arr that are in self.download_progress_report['nda_s3_url']
+            self.s3_links_arr = [x for x in self.s3_links_arr if x not in self.download_progress_report['nda_s3_url'].values]
 
         self.thread_num = args.workerThreads if args.workerThreads else max([1, multiprocessing.cpu_count() - 1])
 
@@ -242,9 +256,15 @@ class Downloader:
         download_progress_file_writer_pool = ThreadPool(1, 1000)
         download_request_ct = 0
 
-        download_progress_report = open(self.download_progress_report_file_path, 'a', newline='')
-        download_progress_report_writer = csv.DictWriter(download_progress_report,
-                                                         fieldnames=self.download_progress_report_column_defs)
+        if os.path.exists(self.download_progress_report_file_path):
+            download_progress_report = open(self.download_progress_report_file_path, 'a', newline='')
+            download_progress_report_writer = csv.DictWriter(download_progress_report,
+                                                            fieldnames=self.download_progress_report_column_defs)
+        else:
+            download_progress_report = open(self.download_progress_report_file_path, 'a', newline='')
+            download_progress_report_writer = csv.DictWriter(download_progress_report,
+                                                            fieldnames=self.download_progress_report_column_defs.keys())
+            download_progress_report_writer.writeheader()
 
         def write_to_download_progress_report_file(download_record):
             download_progress_report_writer.writerow(download_record)

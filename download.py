@@ -69,6 +69,13 @@ def generate_parser():
               "the basenames that you do not want.")
     )
     parser.add_argument(
+        "-r", "--resume", dest="resume", action="store_true", required=False,
+        default = False,
+        help=("Flag to resume a previous download.  If this flag is set, the script will read "
+              "the {log_folder}/.progress_report.csv file to determine which files have "
+              "already been downloaded and will skip those files.")
+    )
+    parser.add_argument(
         '-wt', '--workerThreads', metavar='<thread-count>', type=int, action='store',
         help='''Specifies the number of downloads to attempt in parallel. For example, running 'downloadcmd -dp 12345 -wt 10' will 
     cause the program to download a maximum of 10 files simultaneously until all of the files from package 12345 have been downloaded. 
