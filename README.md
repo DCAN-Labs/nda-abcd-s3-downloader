@@ -38,6 +38,27 @@ From more information on `downloadcmd` visit the [nda-tools GitHub Repository](h
 
 Note: you will need to provide the path to your `datastructure_manifest.txt` file when running `download.py` with the `-m` flag.
 
+### NDA Credentials
+
+To improve security the NDA Token Generator has been deprecated and password storage in the settings.cfg and the password flag have been replaced with keyring. Keyring is a Python package that leverages the operating system's credential manager to securely store and retrieve a users credentials.
+
+To support long-running workflows that make inputs to prompts for username and password difficult we recommend setting your username and password in keyring ahead of time. To set your NDA username and password for your local workspace first ensure that keyring version 23.4.1 is installed. If `~/.config/python_keyring/keyringrc.cfg` does not exist then create it and add the following lines:
+
+```shell
+[backend]
+ default-keyring=keyrings.alt.file.PlaintextKeyring
+ keyring-path=/tmp/work
+```
+
+After the contents of keyringrc.cfg have been properly edited, open up an interactive python3 session and run these commands:
+
+```shell
+import keyring
+keyring.set_password("nda-tools", USERNAME, PASSWORD)
+```
+
+If this is set up properly you should no longer have to enter your password manually when running the downloader.
+
 ## Recommended Inputs
 
 ### data_subsets.txt
@@ -62,26 +83,6 @@ A list of all necessary pip installable dependencies can be found in requirement
 python3 -m pip install -r requirements.txt --user
 ```
 
-### NDA Credentials
-
-To improve security the NDA Token Generator has been deprecated and password storage in the settings.cfg and the password flag have been replaced with keyring. Keyring is a Python package that leverages the operating system's credential manager to securely store and retrieve a users credentials.
-
-To support long-running workflows that make inputs to prompts for username and password difficult we recommend setting your username and password in keyring ahead of time. To set your NDA username and password for your local workspace first ensure that keyring version 23.4.1 is installed. If `~/.config/python_keyring/keyringrc.cfg` does not exist then create it and add the following lines:
-
-```shell
-[backend]
- default-keyring=keyrings.alt.file.PlaintextKeyring
- keyring-path=/tmp/work
-```
-
-After the contents of keyringrc.cfg have been properly edited, open up an interactive python3 session and run these commands:
-
-```shell
-import keyring
-keyring.set_password("nda-tools", USERNAME, PASSWORD)
-```
-
-If this is set up properly you should no longer have to enter your password manually when running the downloader.
 
 ## Usage
 
