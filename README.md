@@ -88,7 +88,7 @@ python3 -m pip install -r requirements.txt --user
 
 For full usage documentation, type the following while inside your folder containing this cloned repository.
 
-```shell
+
 python3 download.py -h
 
 usage: download.py [-h] [-dp <package-id>] -m MANIFEST_FILE -o OUTPUT 
@@ -141,4 +141,3 @@ optional arguments:
                         the download will slow. With 32 GB of RAM, a value of
                         '10' is probably close to the maximum number of
                         parallel downloads that the computer can handle.
-```
