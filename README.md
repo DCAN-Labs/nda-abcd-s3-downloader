@@ -91,53 +91,54 @@ For full usage documentation, type the following while inside your folder contai
 ```shell
 python3 download.py -h
 
-usage: download.py [-h] -dp PACKAGE -m MANIFEST -o OUTPUT [-s SUBJECT_LIST_FILE]
-                   [-l LOG_FOLDER] [-d DATA_SUBSETS_FILE] [-wt WORKER_THREADS]
+usage: download.py [-h] [-dp <package-id>] -m MANIFEST_FILE -o OUTPUT 
+                   [-s SUBJECT_LIST_FILE] [-l LOG_FOLDER] 
+                   [-b BASENAMES_FILE][-wt <thread-count>]
 
 This python script takes in a list of data subsets and a list of
 subjects/sessions and downloads the corresponding files from NDA using the
-NDA provided AWS S3 links.
+NDA's provided AWS S3 links.
 
-required arguments:
-  -dp, --package        Package ID of the NDA data package.
-  -m, --manifest
-                        Path to the datstructure_manifest.txt file 
-                        downloaded from the NDA containing s3 links for all 
-                        subjects and their derivatives.
-  -o, --output
+optional arguments:
+  -h,                  --help    
+                        Show this help message and exit.
+  -dp <package-id>,    --package <package-id>
+                        Flags to download all S3 files in package. Required.
+  -m MANIFEST_FILE,    --manifest MANIFEST_FILE
+                        Path to the .csv file downloaded from the NDA
+                        containing s3 links for all subjects and their
+                        derivatives.
+  -o OUTPUT,           --output OUTPUT
                         Path to root folder which NDA data will be downloaded
                         into. A folder will be created at the given path if
                         one does not already exist.
-
-optional arguments:
-  -h, --help            Show this help message and exit.
-  -s, --subject-list
+  -s SUBJECT_LIST_FILE, --subject-list SUBJECT_LIST_FILE
                         Path to a .txt file containing a list of subjects for
                         which derivatives and inputs will be downloaded. By
                         default without providing input to this argument all
                         available subjects are selected.
-  -l, --logs
+  -l LOG_FOLDER,        --logs LOG_FOLDER
                         Path to existent folder to contain your download
                         success and failure logs. By default, the logs are
                         output to your home directory: ~/
-  -d, --data-subsets-file 
+  -b BASENAMES_FILE,    --basenames-file BASENAMES_FILE
                         Path to a .txt file containing a list of all the data
-                        subset names to download for each subject. By default
-                        all the possible derivatives and inputs will be will
-                        be used. This is the data_subsets.txt file included in
-                        this repository. To select a subset it is recomended
-                        that you simply copy this file and remove all the
-                        basenames that you do not want.
-  -wt, --workerThreads
+                        basenames names to download for each subject. By
+                        default all the possible derivatives and inputs will
+                        be will be used. This is the data_subsets.txt file
+                        included in this repository. To select a subset it is
+                        recomended that you simply copy this file and remove
+                        all the basenames that you do not want.
+  -wt <thread-count>,   --workerThreads <thread-count>
                         Specifies the number of downloads to attempt in
-                        parallel. For example, running downloadcmd -dp 12345
-                        -wt 10 will cause the program to download a maximum
+                        parallel. For example, running 'downloadcmd -dp 12345
+                        -wt 10' will cause the program to download a maximum
                         of 10 files simultaneously until all of the files from
                         package 12345 have been downloaded. A default value is
                         calculated based on the number of cpus found on the
                         machine, however a higher value can be chosen to
                         decrease download times. If this value is set too high
                         the download will slow. With 32 GB of RAM, a value of
-                        10 is probably close to the maximum number of
-                        parallel downloads that the computer can handle
+                        '10' is probably close to the maximum number of
+                        parallel downloads that the computer can handle.
 ```
