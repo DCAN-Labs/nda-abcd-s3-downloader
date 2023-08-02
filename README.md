@@ -88,7 +88,7 @@ python3 -m pip install -r requirements.txt --user
 
 For full usage documentation, type the following while inside your folder containing this cloned repository.
 
-```shell
+```
 python3 download.py -h
 
 usage: download.py [-h] [-dp <package-id>] -m MANIFEST_FILE -o OUTPUT 
@@ -99,11 +99,9 @@ This python script takes in a list of data subsets and a list of
 subjects/sessions and downloads the corresponding files from NDA using the
 NDA's provided AWS S3 links.
 
-optional arguments:
-  -h,                  --help    
-                        Show this help message and exit.
+required arguments:
   -dp <package-id>,    --package <package-id>
-                        Flags to download all S3 files in package. Required.
+                        Flags to download all S3 files in package.
   -m MANIFEST_FILE,    --manifest MANIFEST_FILE
                         Path to the .csv file downloaded from the NDA
                         containing s3 links for all subjects and their
@@ -112,6 +110,9 @@ optional arguments:
                         Path to root folder which NDA data will be downloaded
                         into. A folder will be created at the given path if
                         one does not already exist.
+optional arguments:
+  -h,                   --help    
+                        Show this help message and exit.
   -s SUBJECT_LIST_FILE, --subject-list SUBJECT_LIST_FILE
                         Path to a .txt file containing a list of subjects for
                         which derivatives and inputs will be downloaded. By
