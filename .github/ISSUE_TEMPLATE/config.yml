@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Questions
-    url: https://github.com/DCAN-Labs/nda-abcd-s3-downloader
-    about: Please ask and answer questions related to the NDA downloader usage here.
+  - name: Documentation
+    url: https://github.com/DCAN-Labs/nda-abcd-s3-downloader#readme
+    about: Read about the usage of the downloader. 

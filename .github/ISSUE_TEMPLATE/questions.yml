@@ -1,0 +1,14 @@
+name: Question
+description: Ask a question about this project
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check our [documentation](https://github.com/DCAN-Labs/nda-abcd-s3-downloader#readme) prior to asking a question here! 
+  - type: textarea
+    id: summary
+    attributes:
+      label: A short summary of a question you have for the downloader development team.
+    validations:
+      required: true
