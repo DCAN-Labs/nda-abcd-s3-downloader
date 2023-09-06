@@ -10,6 +10,14 @@ In the past users have been able to download data from any collection they have 
 
 We recognize that users often want to download a subset of this collection, whether it be the BIDS input data, the functional data processed with abcd-hcp-pipeline, the diffusion processed with QSIPrep or a more specific subset of data from a particular population of subjects. To accommodate we recommend users provide a text file containing a list of data subsets and subjects
 
+## Installation
+
+First, clone this repository, then install the necessary software outlined in the requirements.txt:
+
+`git clone https://github.com/DCAN-Labs/nda-abcd-s3-downloader.git`
+
+`python3 -m pip install -r nda-abcd-s3-downloader/requirements.txt --user`
+
 ## Requirements
 
 ### Make Data Package on NDA website
