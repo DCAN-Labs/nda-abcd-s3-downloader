@@ -12,7 +12,7 @@ We recognize that users often want to download a subset of this collection, whet
 
 ## Installation
 
-First, clone this repository, then install the necessary software outlined in the requirements.txt:
+First, clone this repository, then install the necessary python dependencies outlined in the requirements.txt:
 
 `git clone https://github.com/DCAN-Labs/nda-abcd-s3-downloader.git`
 
@@ -81,14 +81,6 @@ By default all data subsets specified in the data_subsets.txt for ALL subjects w
 sub-NDARINVXXXXXXX
 sub-NDARINVYYYYYYY
 sub-NDARINVZZZZZZZ
-```
-
-### Python dependencies
-
-A list of all necessary pip installable dependencies can be found in requirements.txt. To install run the following command:
-
-```shell
-python3 -m pip install -r requirements.txt --user
 ```
 
 
