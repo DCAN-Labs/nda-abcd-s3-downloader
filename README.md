@@ -1,27 +1,28 @@
-## Update on ABCD Data Download Process
+## :mega: :mega: Update on ABCD Data Download Process :mega: :mega:
 
 ### Current Status:
-We are currently upgrading our s3 downloader to be compatible with the latest NDA-Tools version (0.2.25). This necessary update has temporarily impacted our standard download services. We are actively working to complete this upgrade and restore full functionality. As of now follow this temporary download method to download data from the NDA:
+
+_We are currently upgrading our s3 downloader to be compatible with the latest NDA-Tools version (0.2.25). This necessary update has temporarily impacted our standard download services. We are actively working to complete this upgrade and restore full functionality. In the meantime, please follow this temporary download method in the following section to download data from the NDA._
 
 
 ### Interim Download Method:
 
-Create a package on the NDA following the same steps as our [s3 downloader](https://github.com/DCAN-Labs/nda-abcd-s3-downloader?tab=readme-ov-file#make-data-package-on-nda-website), with the specific adjustment of selecting only the file types that interest you from the "DCAN Labs ABCD-BIDS Community Collection (ABCC)." This selection process will likely involve checking multiple boxes. Please note that the NDA has introduced a two-month expiration date for their packages. If you require continued access beyond this timeframe, you will need to create a new package.
+1. Create a package on the NDA following the same steps as our [s3 downloader](https://github.com/DCAN-Labs/nda-abcd-s3-downloader?tab=readme-ov-file#make-data-package-on-nda-website), with the specific adjustment of selecting only the file types that interest you from the "DCAN Labs ABCD-BIDS Community Collection (ABCC)." This selection process will likely involve checking multiple boxes. Please note that the NDA has introduced a two-month expiration date for their packages. If you require continued access beyond this timeframe, you will need to create a new package.
 
-Once your package has been successfully created on the NDA (be aware that this process may take some time), make sure your [NDA-tools](https://github.com/NDAR/nda-tools) are updated to version 0.2.25.
+2. Once your package has been successfully created on the NDA (be aware that this process may take some time), make sure your [NDA-tools](https://github.com/NDAR/nda-tools) installation is updated to version `0.2.25``.
 
-Also, verify that your credentials are correctly configured according to the same guidelines as for our [s3 downloader](https://github.com/DCAN-Labs/nda-abcd-s3-downloader?tab=readme-ov-file#nda-credentials).
+3. Verify that your credentials are correctly configured according to the same guidelines as for our [s3 downloader](https://github.com/DCAN-Labs/nda-abcd-s3-downloader?tab=readme-ov-file#nda-credentials).
 
-When ready to download your package, use the command below to retrieve the entire package.
+4. When ready to download your package, use the command below to retrieve the entire package.
 
-```
-downloadcmd -dp data_package_id -d /download/output/directory
-```
+  ```
+  downloadcmd -dp data_package_id -d /download/output/directory
+  ```
 
-Note: Depending on your system's resources, you might want to create multiple packages in step one. Downloading a single file type from all subjects will still take a lot of time. 
+**Note:** Depending on your system's resources, you might want to create multiple packages in step one. Downloading a single file type from all subjects can take a lot of time.
 
 
-# NDA Collection 3165 ABCD-BIDS Downloader
+# :no_entry_sign: NDA Collection 3165 ABCD-BIDS Downloader :no_entry_sign:
 
 This tool can be used to download data from the DCAN Labs ABCD-BIDS Collection 3165 that is hosted on the NIMH Data Archive (NDA). This dataset includes ABCD BIDS inputs and derivatives from the abcd-hcp-pipeline, fMRIPrep, and QSIPrep.  All files are stored in Amazon Web Services (AWS) Simple Storage Service (S3) buckets and can only be accessed via the NDA API.
 
