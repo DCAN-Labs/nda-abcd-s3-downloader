@@ -2,7 +2,7 @@
 
 ### Current Status:
 
-> _We are currently upgrading our s3 downloader to be compatible with the latest NDA-Tools version (`0.2.25`). This necessary update has temporarily impacted our standard download services. We are actively working to complete this upgrade and restore full functionality. In the meantime, please follow this temporary download method in the following section to download data from the NDA._
+_We are currently upgrading our s3 downloader to be compatible with the latest NDA-Tools version (`0.2.25`). This necessary update has temporarily impacted our standard download services. We are actively working to complete this upgrade and restore full functionality. In the meantime, please follow this temporary download method in the following section to download data from the NDA._
 
 
 ### Interim Download Method:
