@@ -246,9 +246,9 @@ class Downloader:
             package_files = self.query_package_files_by_s3_url(self.s3_links_arr[batch_start:batch_end])
             tmp = {r['package_file_id']:r for r in package_files}
             self.local_file_names.update(tmp)
-            batch_start += batch_size
             if batch_start >= len(self.s3_links_arr):
                 break
+            batch_start += batch_size
             batch_end = min(batch_end + batch_size, len(self.s3_links_arr))
             yield package_files
 
