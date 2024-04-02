@@ -143,7 +143,7 @@ class Downloader:
         self.package_url = 'https://nda.nih.gov/api/package'
 
         # Datastructure manifest that is automatically included in the data package (TODO: Download instead of input)
-        self.manifest = pd.read_csv(args.manifest_file,'\t')
+        self.manifest = pd.read_csv(args.manifest_file, sep='\t')
 
         # List of data subsets that the user intends to download
         self.data_basenames = args.basenames_file
@@ -255,9 +255,13 @@ class Downloader:
 
     def query_package_files_by_s3_url(self, s3_path_list):
         url = self.package_url + '/{}/files'.format(self.package_id)
-        response = post_request(url, list(s3_path_list), auth=self.auth, error_handler=HttpErrorHandlingStrategy.reraise_status)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = post_request(url, list(s3_path_list), auth=self.auth, error_handler=HttpErrorHandlingStrategy.reraise_status)
+            response.raise_for_status()
+            return response.json()
+        except HTTPError as e:
+            self.explain_HTTPError(e)
+        
 
     def get_presigned_urls(self, id_list):
         """
@@ -307,17 +311,43 @@ class Downloader:
         with requests.session() as s:
             s.mount(ps_url, get_http_adapter(ps_url))
             with open(partial_download, 'wb') as download_file:
-                with s.get(ps_url, stream=True) as response:
-                    response.raise_for_status()
-                    for chunk in response.iter_content(chunk_size=1024 * 1024 * 5): # iterate 5MB chunks
-                        if chunk:
-                            bytes_written += download_file.write(chunk)
+                try:
+                    with s.get(ps_url, stream=True) as response:
+                        response.raise_for_status()
+                        for chunk in response.iter_content(chunk_size=1024 * 1024 * 5): # iterate 5MB chunks
+                            if chunk:
+                                bytes_written += download_file.write(chunk)
+                
+                except HTTPError as e:
+                    self.explain_HTTPError(e)
         os.rename(partial_download, completed_download)
         logger.info('Completed download: {}'.format(completed_download))
 
         return
-
-            
+    
+    def explain_HTTPError(self, err: HTTPError) -> None:
+        """
+        Given an HTTPError, log a human-readable message explaining it
+        :param err: HTTPError to explain in a log message to the user
+        """
+        msg = [f"\nHTTP Error {err.response.status_code}: "]
+        try:
+            if err.response.text:
+                details = err.response.json()
+                msg.append(details.get("message", ""))
+        except (AttributeError, KeyError):
+            pass
+        msg.append({  # TODO Add HTTPErrors with other statuses (esp 504)?
+            400: f"{self.package_id} may not be a valid package ID. Double-"
+                 "check that it is an integer with 7 digits.",
+            401: "Unauthorized access due to invalid credentials. Make sure "
+                 "to enter your NIMH Data Archives credentials correctly.",
+            404: f"The NDA may have archived package {self.package_id}. If "
+                 "it is listed under 'Data Packages' on the NDA website as "
+                 "'Package Archived', then you need to generate a new package."
+        }.get(err.response.status_code, next(err.args)))
+        logger.error("".join(msg))
+        sys.exit(err.response.status_code)
 
 
 class Authenticator:
