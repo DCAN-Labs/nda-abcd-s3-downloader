@@ -23,4 +23,4 @@ s3transfer==0.6.0
 SecretStorage==3.3.3
 six==1.16.0
 urllib3==1.26.18
-zipp==3.14.0
+zipp==3.19.1
