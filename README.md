@@ -1,8 +1,6 @@
-## :mega: :mega: Update on ABCD Data Download Process :mega: :mega:
+## :mega: Repository No Longer Being Maintained :mega:
 
-### Current Status:
-
-_We are currently upgrading our s3 downloader to be compatible with the latest NDA-Tools version (`0.2.25`). This necessary update has temporarily impacted our standard download services. We are actively working to complete this upgrade and restore full functionality. In the meantime, please follow this temporary download method in the following section to download data from the NDA._
+**We have adopted a new process for storing and sharing ABCD data and will therefore no longer be maintaining this repository!**
 
 
 ### Interim Download Method:
